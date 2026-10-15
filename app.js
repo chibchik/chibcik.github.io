@@ -1,7 +1,6 @@
 /**
  * SmartLocker — Автоматична камера схову
- * Лабораторна робота № 1 з дисципліни «Людино-машинна взаємодія» (ХНУРЕ)
- * Десктопна та мобільна реалізація інтерфейсу
+ * Спрощений, чистий та адаптивний інтерфейс
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -12,61 +11,48 @@ document.addEventListener('DOMContentLoaded', () => {
   const LOCKER_LOCATIONS = [
     {
       id: 'loc-1',
-      name: 'Сад Шевченка (Центральний фонтан)',
-      address: 'вул. Сумська, 35, Харків',
+      name: 'Сад Шевченка (Біля фонтану)',
+      address: 'вул. Сумська, 35',
       lat: 50.0005,
       lng: 36.2305,
       distance: '120 м',
-      operatingHours: 'Цілодобово 24/7',
-      totalCells: 16,
-      freeCells: 7,
-      hint: 'Поруч із центральним фонтаном та алеєю'
+      freeCells: 7
     },
     {
       id: 'loc-2',
       name: 'ТРЦ «Нікольський»',
-      address: 'вул. Григорія Сковороди, 2А, Харків',
+      address: 'вул. Григорія Сковороди, 2А',
       lat: 49.9912,
       lng: 36.2342,
       distance: '350 м',
-      operatingHours: '10:00 – 22:00',
-      totalCells: 24,
-      freeCells: 11,
-      hint: 'Вхід з вул. Короленка, рівень -1 біля паркінгу'
+      freeCells: 11
     },
     {
       id: 'loc-3',
-      name: 'Харків-Пасажирський (Південний вокзал)',
-      address: 'Привокзальний майдан, 1, Харків',
+      name: 'Південний вокзал (Харків-Пас.)',
+      address: 'Привокзальний майдан, 1',
       lat: 49.9882,
       lng: 36.2045,
       distance: '850 м',
-      operatingHours: 'Цілодобово 24/7',
-      totalCells: 32,
-      freeCells: 5,
-      hint: 'Центральний касовий зал, біля ескалаторів'
+      freeCells: 5
     },
     {
       id: 'loc-4',
-      name: 'Саржин Яр (Джерело & Парк)',
-      address: 'вул. Отакара Яроша / Саржинська, Харків',
+      name: 'Саржин Яр',
+      address: 'вул. Отакара Яроша',
       lat: 50.0210,
       lng: 36.2312,
       distance: '1.4 км',
-      operatingHours: '06:00 – 23:00',
-      totalCells: 12,
-      freeCells: 8,
-      hint: 'Поруч зі спортивним майданчиком та бюветом'
+      freeCells: 8
     }
   ];
 
   const SIZE_PRICING = {
-    'S': { name: 'Розмір S (Мала)', rate: 25, specs: '30×40×50 см', capacity: 'до 15 кг' },
-    'M': { name: 'Розмір M (Середня)', rate: 45, specs: '45×60×60 см', capacity: 'до 25 кг' },
-    'L': { name: 'Розмір L (Велика)', rate: 70, specs: '60×80×80 см', capacity: 'до 40 кг' }
+    'S': { name: 'Розмір S', rate: 25 },
+    'M': { name: 'Розмір M', rate: 45 },
+    'L': { name: 'Розмір L', rate: 70 }
   };
 
-  // State
   let state = {
     selectedLocker: LOCKER_LOCATIONS[0],
     selectedSize: 'M',
@@ -78,26 +64,18 @@ document.addEventListener('DOMContentLoaded', () => {
     mapMarkers: []
   };
 
-  // Audio Context for mechanical lock sound synthesis
+  // Audio Context for mechanical lock sound
   let audioCtx = null;
-
-  function initAudioContext() {
-    if (!audioCtx) {
-      const AudioContext = window.AudioContext || window.webkitAudioContext;
-      if (AudioContext) {
-        audioCtx = new AudioContext();
-      }
-    }
-  }
 
   function playLockSound() {
     try {
-      initAudioContext();
-      if (!audioCtx) return;
-      if (audioCtx.state === 'suspended') {
-        audioCtx.resume();
+      if (!audioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (AudioContext) audioCtx = new AudioContext();
       }
-      
+      if (!audioCtx) return;
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+
       const now = audioCtx.currentTime;
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
@@ -131,20 +109,18 @@ document.addEventListener('DOMContentLoaded', () => {
         osc2.stop(now2 + 0.08);
       }, 70);
     } catch (e) {
-      console.warn('Audio synthesis not supported or blocked:', e);
+      console.warn('Audio blocked or not supported');
     }
   }
 
   // ==========================================
-  // 2. PERSISTENCE (localStorage)
+  // 2. PERSISTENCE
   // ==========================================
 
   function loadSavedData() {
     try {
       const savedRental = localStorage.getItem('smartlocker_active_rental');
-      if (savedRental) {
-        state.activeRental = JSON.parse(savedRental);
-      }
+      if (savedRental) state.activeRental = JSON.parse(savedRental);
 
       const savedHistory = localStorage.getItem('smartlocker_history');
       if (savedHistory) {
@@ -157,14 +133,14 @@ document.addEventListener('DOMContentLoaded', () => {
             cellNum: 8,
             size: 'S',
             date: 'Вчора, 18:20',
-            duration: '1 год 45 хв',
-            totalPaid: '45.00 грн'
+            duration: '2 год',
+            totalPaid: '50.00 грн'
           }
         ];
         saveHistory();
       }
     } catch (e) {
-      console.error('Error loading saved state:', e);
+      console.error(e);
     }
   }
 
@@ -176,7 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.removeItem('smartlocker_active_rental');
       }
     } catch (e) {
-      console.error('Error saving rental state:', e);
+      console.error(e);
     }
   }
 
@@ -184,12 +160,12 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       localStorage.setItem('smartlocker_history', JSON.stringify(state.history));
     } catch (e) {
-      console.error('Error saving history:', e);
+      console.error(e);
     }
   }
 
   // ==========================================
-  // 3. NAVIGATION & SCREEN SWITCHING
+  // 3. NAVIGATION
   // ==========================================
 
   const screens = {
@@ -210,43 +186,40 @@ document.addEventListener('DOMContentLoaded', () => {
     if (desktopRentalDot) desktopRentalDot.style.display = isRenting ? 'inline-block' : 'none';
   }
 
-  function switchScreen(screenId) {
-    Object.keys(screens).forEach(id => {
-      if (screens[id]) {
-        screens[id].classList.toggle('active', id === screenId);
-      }
-    });
-
-    // Update desktop nav
-    desktopNavLinks.forEach(link => {
-      const target = link.getAttribute('data-target');
-      link.classList.toggle('active', target === screenId);
-    });
-
-    // Update mobile tab buttons
-    mobileTabButtons.forEach(btn => {
-      const target = btn.getAttribute('data-target');
-      btn.classList.toggle('active', target === screenId);
-    });
-
-    // Invalidate map size
-    if (screenId === 'screen-map' && state.map) {
-      setTimeout(() => state.map.invalidateSize(), 200);
-    }
-
-    // Scroll to top
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    const activeView = screens[screenId];
-    if (activeView) {
-      const scrollable = activeView.querySelector('.scrollable-content');
-      if (scrollable) scrollable.scrollTop = 0;
+  function invalidateMap() {
+    if (state.map) {
+      setTimeout(() => {
+        state.map.invalidateSize();
+      }, 50);
+      setTimeout(() => {
+        state.map.invalidateSize();
+      }, 300);
     }
   }
 
-  // Navigation handlers
-  function handleNavClick(target) {
+  function switchScreen(screenId) {
+    Object.keys(screens).forEach(id => {
+      if (screens[id]) screens[id].classList.toggle('active', id === screenId);
+    });
+
+    desktopNavLinks.forEach(link => {
+      link.classList.toggle('active', link.getAttribute('data-target') === screenId);
+    });
+
+    mobileTabButtons.forEach(btn => {
+      btn.classList.toggle('active', btn.getAttribute('data-target') === screenId);
+    });
+
+    if (screenId === 'screen-map') {
+      invalidateMap();
+    }
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function handleNav(target) {
     if (target === 'screen-rental' && !state.activeRental) {
-      showToast('У вас наразі немає активної оренди. Оберіть вільну комірку!', 'info');
+      showToast('Немає активної оренди. Оберіть комірку!', 'info');
       switchScreen('screen-booking');
       return;
     }
@@ -254,71 +227,45 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   desktopNavLinks.forEach(link => {
-    link.addEventListener('click', () => {
-      handleNavClick(link.getAttribute('data-target'));
-    });
+    link.addEventListener('click', () => handleNav(link.getAttribute('data-target')));
   });
 
   mobileTabButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-      handleNavClick(btn.getAttribute('data-target'));
-    });
+    btn.addEventListener('click', () => handleNav(btn.getAttribute('data-target')));
   });
 
-  // Brand logo click goes to map
   const brandLogoBtn = document.getElementById('brandLogoBtn');
   if (brandLogoBtn) {
     brandLogoBtn.addEventListener('click', () => switchScreen('screen-map'));
   }
 
-  // Back buttons
   document.querySelectorAll('.nav-back-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      const target = btn.getAttribute('data-back-to') || 'screen-map';
-      switchScreen(target);
+      switchScreen(btn.getAttribute('data-back-to') || 'screen-map');
     });
   });
 
-  // Academic Docs Modals
-  const reportDocsModal = document.getElementById('reportDocsModal');
-  const openDocsBtn = document.getElementById('openDocsBtn');
-  const closeReportDocsBtn = document.getElementById('closeReportDocsBtn');
-  const closeReportDocsBtnBottom = document.getElementById('closeReportDocsBtnBottom');
-
-  function openDocs() {
-    if (reportDocsModal.showModal) reportDocsModal.showModal();
-    else reportDocsModal.setAttribute('open', 'true');
-  }
-
-  function closeDocs() {
-    if (reportDocsModal.close) reportDocsModal.close();
-    else reportDocsModal.removeAttribute('open');
-  }
-
-  if (openDocsBtn) openDocsBtn.addEventListener('click', openDocs);
-  if (closeReportDocsBtn) closeReportDocsBtn.addEventListener('click', closeDocs);
-  if (closeReportDocsBtnBottom) closeReportDocsBtnBottom.addEventListener('click', closeDocs);
+  // Handle window resizing to keep map responsive
+  window.addEventListener('resize', invalidateMap);
 
   // ==========================================
-  // 4. MAP & LOCKER DISCOVERY (SCREEN 1)
+  // 4. MAP & LOCKERS LIST (SCREEN 1)
   // ==========================================
 
   function initMap() {
-    const initialCoords = [50.000, 36.230];
+    const coords = [50.000, 36.230];
     
     state.map = L.map('lockersMap', {
-      zoomControl: false,
-      attributionControl: false
-    }).setView(initialCoords, 14);
+      zoomControl: true
+    }).setView(coords, 14);
 
     L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
       maxZoom: 19,
       subdomains: 'abcd'
     }).addTo(state.map);
 
-    L.control.zoom({ position: 'bottomright' }).addTo(state.map);
-
     renderMapMarkers(LOCKER_LOCATIONS);
+    invalidateMap();
   }
 
   function renderMapMarkers(locations) {
@@ -326,19 +273,20 @@ document.addEventListener('DOMContentLoaded', () => {
     state.mapMarkers = [];
 
     locations.forEach(loc => {
+      const isSelected = loc.id === state.selectedLocker.id;
       const markerHtml = `
-        <div class="custom-map-pin ${loc.id === state.selectedLocker.id ? 'active' : ''}" style="
-          background: #2563eb;
+        <div style="
+          background: ${isSelected ? '#1d4ed8' : '#2563eb'};
           color: #fff;
-          padding: 6px 12px;
-          border-radius: 20px;
+          padding: 5px 10px;
+          border-radius: 14px;
           border: 2px solid #fff;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-          font-weight: 800;
+          box-shadow: 0 3px 8px rgba(0,0,0,0.25);
+          font-weight: 700;
           font-size: 11px;
           display: flex;
           align-items: center;
-          gap: 6px;
+          gap: 5px;
           white-space: nowrap;
           cursor: pointer;
         ">
@@ -348,28 +296,21 @@ document.addEventListener('DOMContentLoaded', () => {
       `;
 
       const customIcon = L.divIcon({
-        className: 'locker-leaflet-marker',
+        className: 'custom-locker-marker',
         html: markerHtml,
-        iconSize: [95, 32],
-        iconAnchor: [47, 16]
+        iconSize: [85, 28],
+        iconAnchor: [42, 14]
       });
 
       const marker = L.marker([loc.lat, loc.lng], { icon: customIcon }).addTo(state.map);
-      
-      marker.on('click', () => {
-        selectLocker(loc);
-      });
-
+      marker.on('click', () => selectLocker(loc));
       state.mapMarkers.push(marker);
     });
   }
 
   function selectLocker(locker) {
     state.selectedLocker = locker;
-    
-    if (state.map) {
-      state.map.panTo([locker.lat, locker.lng], { animate: true });
-    }
+    if (state.map) state.map.panTo([locker.lat, locker.lng], { animate: true });
 
     document.querySelectorAll('.locker-card').forEach(card => {
       card.classList.toggle('highlighted', card.getAttribute('data-id') === locker.id);
@@ -380,12 +321,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function renderLockersList(locations) {
     const container = document.getElementById('lockersList');
-    const badge = document.getElementById('lockersCountBadge');
     container.innerHTML = '';
-    badge.textContent = `${locations.length} локації`;
 
     if (locations.length === 0) {
-      container.innerHTML = `<div style="text-align:center; padding:30px; color:#64748b; font-size:0.9rem;">За вашим запитом камер схову не знайдено</div>`;
+      container.innerHTML = `<div style="text-align:center; padding:24px; color:#94a3b8; font-size:0.85rem;">Нічого не знайдено</div>`;
       return;
     }
 
@@ -396,16 +335,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
       card.innerHTML = `
         <div class="card-top">
-          <div>
-            <div class="locker-title">${loc.name}</div>
-            <div class="locker-address"><i class="fa-solid fa-location-dot"></i> ${loc.address}</div>
-          </div>
+          <span class="locker-title">${loc.name}</span>
           <span class="locker-dist">${loc.distance}</span>
         </div>
+        <div class="locker-address">${loc.address}</div>
         <div class="card-footer">
-          <span class="free-cells-count"><i class="fa-solid fa-circle-check"></i> ${loc.freeCells} вільних комірок</span>
+          <span class="free-cells-count">${loc.freeCells} вільних комірок</span>
           <button class="btn-select-locker">
-            Обрати локер <i class="fa-solid fa-chevron-right"></i>
+            Обрати <i class="fa-solid fa-chevron-right"></i>
           </button>
         </div>
       `;
@@ -419,18 +356,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Search without category pills
   const searchInput = document.getElementById('lockerSearchInput');
   const clearSearchBtn = document.getElementById('clearSearchBtn');
 
   function filterLockers() {
     const query = searchInput.value.trim().toLowerCase();
-
     const filtered = LOCKER_LOCATIONS.filter(loc => {
-      return !query || 
-        loc.name.toLowerCase().includes(query) || 
-        loc.address.toLowerCase().includes(query) || 
-        loc.hint.toLowerCase().includes(query);
+      return !query || loc.name.toLowerCase().includes(query) || loc.address.toLowerCase().includes(query);
     });
 
     renderLockersList(filtered);
@@ -448,32 +380,26 @@ document.addEventListener('DOMContentLoaded', () => {
     filterLockers();
   });
 
-  document.getElementById('refreshLocationsBtn').addEventListener('click', () => {
-    showToast('Список камер схову оновлено', 'info');
-    filterLockers();
-  });
-
   document.getElementById('locateUserBtn').addEventListener('click', () => {
     if (state.map) {
       state.map.setView([50.0005, 36.2305], 16);
-      showToast('Ваше місцезнаходження визначено!', 'success');
+      showToast('Ваше місцезнаходження визначено', 'success');
     }
   });
 
   // ==========================================
-  // 5. BOOKING SCREEN & COMPARTMENTS WITH PRICES (SCREEN 2)
+  // 5. BOOKING SCREEN (SCREEN 2)
   // ==========================================
 
   function updateBookingSummary() {
     const loc = state.selectedLocker;
-    document.getElementById('bookingLockerName').textContent = loc.name;
-    document.getElementById('bookingLockerAddress').innerHTML = `<i class="fa-solid fa-location-dot"></i> ${loc.address}`;
-    document.getElementById('bookingLockerDistance').textContent = `${loc.distance} від вас`;
+    const nameEl = document.getElementById('bookingLockerName');
+    if (nameEl) nameEl.textContent = loc.name;
+
     renderCompartmentsGrid();
     calculatePrice();
   }
 
-  // Compartments Matrix Generation (Prices and size on each cell)
   function renderCompartmentsGrid() {
     const grid = document.getElementById('compartmentsGrid');
     grid.innerHTML = '';
@@ -492,22 +418,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (isBusy) {
         cellEl.classList.add('busy');
-        cellEl.title = `Комірка №${i} (${sizeInfo.name}) — Зайнята`;
+        cellEl.title = `Комірка №${i} — Зайнята`;
       } else {
         cellEl.classList.add('free');
-        if (i === state.selectedCellNum) {
-          cellEl.classList.add('chosen');
-        }
-        cellEl.title = `Комірка №${i} (${sizeInfo.name}) — Вільна для оренди (${sizeInfo.rate} грн/год)`;
+        if (i === state.selectedCellNum) cellEl.classList.add('chosen');
+        cellEl.title = `Комірка №${i} (${sizeInfo.rate} грн/год)`;
       }
 
       cellEl.innerHTML = `
         <div class="cell-top-bar">
-          <span class="cell-num">№ ${i}</span>
+          <span class="cell-num">${i}</span>
           <span class="cell-led"></span>
         </div>
-        <div class="cell-size-badge">${cellSize} • ${sizeInfo.capacity}</div>
-        <div class="cell-price-tag">${sizeInfo.rate} грн/год</div>
+        <div class="cell-info-row">
+          <span class="cell-size-badge">${cellSize}</span>
+          <span class="cell-price-tag">${sizeInfo.rate} грн/год</span>
+        </div>
       `;
 
       if (!isBusy) {
@@ -525,7 +451,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnCellNumber').textContent = state.selectedCellNum;
   }
 
-  // Duration Slider & Price Calculator
   const durationSlider = document.getElementById('durationSlider');
   const durationLabel = document.getElementById('durationLabel');
 
@@ -542,20 +467,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const rate = sizeInfo.rate;
     const total = hours * rate;
 
-    const calcBadge = document.getElementById('calcCellBadge');
-    if (calcBadge) {
-      calcBadge.textContent = `Комірка № ${state.selectedCellNum} (${sizeInfo.name})`;
-    }
+    const badge = document.getElementById('calcCellBadge');
+    if (badge) badge.textContent = `Комірка № ${state.selectedCellNum} (${sizeInfo.name})`;
 
     document.getElementById('calcBaseRate').textContent = `${rate} грн / год`;
-    document.getElementById('calcHours').textContent = `${hours} год`;
     document.getElementById('calcTotalSum').textContent = `${total.toFixed(2)} грн`;
     document.getElementById('btnPricePreview').textContent = `${total.toFixed(0)} грн`;
     document.getElementById('btnCellNumber').textContent = state.selectedCellNum;
   }
 
   // ==========================================
-  // 6. PAYMENT MODAL & CONFIRMATION
+  // 6. PAYMENT MODAL
   // ==========================================
 
   const paymentModal = document.getElementById('paymentModal');
@@ -569,7 +491,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const total = state.estimatedHours * sizeInfo.rate;
 
     document.getElementById('modalLockerName').textContent = state.selectedLocker.name;
-    document.getElementById('modalCellDetails').textContent = `№ ${state.selectedCellNum} (${sizeInfo.name}, ${sizeInfo.rate} грн/год)`;
+    document.getElementById('modalCellDetails').textContent = `№ ${state.selectedCellNum} (${sizeInfo.name})`;
     document.getElementById('modalTimeEstimate').textContent = `${state.estimatedHours} год`;
     document.getElementById('modalTotalPrice').textContent = `${total.toFixed(2)} грн`;
 
@@ -604,26 +526,24 @@ document.addEventListener('DOMContentLoaded', () => {
       lockerId: state.selectedLocker.id,
       lockerName: state.selectedLocker.name,
       lockerAddress: state.selectedLocker.address,
-      hint: state.selectedLocker.hint,
       cellNum: state.selectedCellNum,
       size: state.selectedSize,
       rate: SIZE_PRICING[state.selectedSize].rate,
       startTimestamp: Date.now(),
       startTimeFormatted: `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`,
-      pin: formattedPin,
-      status: 'active'
+      pin: formattedPin
     };
 
     saveActiveRental();
     updateNavigationDots();
     updateRentalScreen();
-    showToast(`Комірку №${state.activeRental.cellNum} заброньовано! Речі готові до зберігання.`, 'success');
+    showToast(`Комірку №${state.activeRental.cellNum} заброньовано!`, 'success');
 
     switchScreen('screen-rental');
 
     setTimeout(() => {
       openDoorModal(state.activeRental.cellNum);
-    }, 600);
+    }, 400);
   });
 
   // ==========================================
@@ -644,16 +564,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('rentalLockerTitle').textContent = rent.lockerName;
     document.getElementById('rentalLockerAddr').textContent = rent.lockerAddress;
-    document.getElementById('rentalLockerHint').textContent = rent.hint || 'Локер розташований біля центрального входу';
     document.getElementById('activeCellNum').textContent = `№ ${rent.cellNum}`;
     
     const sizeInfo = SIZE_PRICING[rent.size];
-    document.getElementById('activeCellSize').textContent = `${rent.size} (${sizeInfo.rate} грн/год, ${sizeInfo.specs})`;
-    document.getElementById('rentalStartTime').textContent = rent.startTimeFormatted;
+    document.getElementById('activeCellSize').textContent = `${rent.size} · ${sizeInfo.rate} грн/год`;
     document.getElementById('rentalPinCode').textContent = rent.pin;
     document.getElementById('qrModalPin').textContent = rent.pin;
 
-    generateQrSvg(rent.id + '-' + rent.pin);
+    generateQrSvg();
 
     if (rentalTimerInterval) clearInterval(rentalTimerInterval);
     rentalTimerInterval = setInterval(updateLiveTimer, 1000);
@@ -683,7 +601,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ==========================================
-  // 8. UNLOCKING COMPARTMENT (METAPHOR OF KEY)
+  // 8. UNLOCKING & COMPLETION
   // ==========================================
 
   const unlockCellBtn = document.getElementById('unlockCellBtn');
@@ -692,34 +610,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
   unlockCellBtn.addEventListener('click', () => {
     if (!state.activeRental) return;
-
     playLockSound();
 
-    unlockCellBtn.style.transform = 'scale(0.97)';
     const textSpan = unlockCellBtn.querySelector('.unlock-main-text');
-    const oldText = textSpan.textContent;
-    textSpan.textContent = 'РОЗБЛОКУВАННЯ...';
+    textSpan.textContent = 'ВІДЧИНЯЄТЬСЯ...';
 
     setTimeout(() => {
-      unlockCellBtn.style.transform = '';
-      textSpan.textContent = oldText;
+      textSpan.textContent = 'ВІДКРИТИ КОМІРКУ';
       openDoorModal(state.activeRental.cellNum);
-    }, 450);
+    }, 400);
   });
 
   function openDoorModal(cellNum) {
     document.getElementById('openedCellNum').textContent = cellNum;
-    
-    const doorVisual = document.getElementById('doorVisual');
-    const lockIcon = document.getElementById('doorLockIcon');
-    const statusText = document.getElementById('doorStatusText');
-
-    if (doorVisual) {
-      doorVisual.className = 'door-visual-box opened';
-      lockIcon.className = 'fa-solid fa-lock-open';
-      statusText.textContent = `Комірка №${cellNum} ВІДЧИНЕНА`;
-    }
-
     if (doorOpenedModal.showModal) doorOpenedModal.showModal();
     else doorOpenedModal.setAttribute('open', 'true');
   }
@@ -727,26 +630,14 @@ document.addEventListener('DOMContentLoaded', () => {
   closeDoorModalBtn.addEventListener('click', () => {
     if (doorOpenedModal.close) doorOpenedModal.close();
     else doorOpenedModal.removeAttribute('open');
-
-    const doorVisual = document.getElementById('doorVisual');
-    const lockIcon = document.getElementById('doorLockIcon');
-    const statusText = document.getElementById('doorStatusText');
-
-    if (doorVisual) {
-      doorVisual.className = 'door-visual-box closed';
-      lockIcon.className = 'fa-solid fa-lock';
-      statusText.textContent = 'Дверцята зачинені та заблоковані';
-    }
-
     showToast('Дверцята заблоковано', 'info');
   });
 
-  // Finish Rental
   const finishRentalBtn = document.getElementById('finishRentalBtn');
   finishRentalBtn.addEventListener('click', () => {
     if (!state.activeRental) return;
 
-    const confirmFinish = confirm('Ви дійсно забрали всі свої речі та бажаєте завершити оренду комірки?');
+    const confirmFinish = confirm('Завершити оренду комірки?');
     if (!confirmFinish) return;
 
     playLockSound();
@@ -763,7 +654,7 @@ document.addEventListener('DOMContentLoaded', () => {
       cellNum: rent.cellNum,
       size: rent.size,
       date: 'Сьогодні, ' + rent.startTimeFormatted,
-      duration: `${totalMinutes} хв (${billedHours} год)`,
+      duration: `${billedHours} год`,
       totalPaid: `${finalPrice} грн`
     });
 
@@ -775,12 +666,12 @@ document.addEventListener('DOMContentLoaded', () => {
     updateRentalScreen();
     renderHistory();
 
-    showToast(`Оренду комірки №${rent.cellNum} успішно завершено! Дякуємо!`, 'success');
+    showToast(`Оренду комірки №${rent.cellNum} завершено!`, 'success');
     switchScreen('screen-map');
   });
 
   // ==========================================
-  // 9. QR CODE & BACKUP PIN
+  // 9. QR CODE & PIN
   // ==========================================
 
   const qrModal = document.getElementById('qrModal');
@@ -788,9 +679,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const closeQrModalBtn = document.getElementById('closeQrModalBtn');
   const dismissQrBtn = document.getElementById('dismissQrBtn');
 
-  function generateQrSvg(text) {
+  function generateQrSvg() {
     const svgCode = `
-      <svg viewBox="0 0 100 100" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+      <svg viewBox="0 0 100 100" width="180" height="180" xmlns="http://www.w3.org/2000/svg">
         <rect width="100" height="100" fill="#ffffff" />
         <rect x="8" y="8" width="28" height="28" fill="#0f172a" rx="4"/>
         <rect x="14" y="14" width="16" height="16" fill="#ffffff" rx="2"/>
@@ -804,29 +695,17 @@ document.addEventListener('DOMContentLoaded', () => {
         <rect x="42" y="10" width="6" height="6" fill="#0f172a"/>
         <rect x="52" y="14" width="6" height="6" fill="#0f172a"/>
         <rect x="42" y="24" width="6" height="6" fill="#0f172a"/>
-        <rect x="52" y="28" width="6" height="6" fill="#0f172a"/>
         <rect x="10" y="44" width="6" height="6" fill="#0f172a"/>
-        <rect x="22" y="48" width="6" height="6" fill="#0f172a"/>
         <rect x="34" y="42" width="6" height="6" fill="#0f172a"/>
-        <rect x="46" y="46" width="6" height="6" fill="#0f172a"/>
         <rect x="60" y="42" width="6" height="6" fill="#0f172a"/>
         <rect x="72" y="48" width="6" height="6" fill="#0f172a"/>
-        <rect x="84" y="44" width="6" height="6" fill="#0f172a"/>
         <rect x="44" y="62" width="6" height="6" fill="#0f172a"/>
         <rect x="56" y="66" width="6" height="6" fill="#0f172a"/>
-        <rect x="44" y="76" width="6" height="6" fill="#0f172a"/>
-        <rect x="68" y="72" width="6" height="6" fill="#0f172a"/>
         <rect x="80" y="80" width="6" height="6" fill="#0f172a"/>
       </svg>
     `;
-
-    const thumb = document.getElementById('qrMockContainer');
-    if (thumb) thumb.innerHTML = svgCode;
-
-    const large = document.getElementById('largeQrContainer');
-    if (large) {
-      large.innerHTML = `<div style="width:220px; height:220px; margin:0 auto;">${svgCode}</div>`;
-    }
+    const container = document.getElementById('largeQrContainer');
+    if (container) container.innerHTML = svgCode;
   }
 
   showQrModalBtn.addEventListener('click', () => {
@@ -845,51 +724,22 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('copyPinBtn').addEventListener('click', () => {
     if (state.activeRental && navigator.clipboard) {
       navigator.clipboard.writeText(state.activeRental.pin);
-      showToast('PIN-код скопійовано', 'info');
-    }
-  });
-
-  document.getElementById('shareRentalBtn').addEventListener('click', () => {
-    if (!state.activeRental) return;
-    const shareText = `Моя оренда SmartLocker: ${state.activeRental.lockerName}, комірка №${state.activeRental.cellNum}. Резервний PIN: ${state.activeRental.pin}`;
-    if (navigator.share) {
-      navigator.share({ title: 'SmartLocker', text: shareText }).catch(() => {});
-    } else if (navigator.clipboard) {
-      navigator.clipboard.writeText(shareText);
-      showToast('Дані оренди скопійовано для відправки!', 'info');
-    }
-  });
-
-  document.getElementById('openRouteBtn').addEventListener('click', () => {
-    if (state.activeRental) {
-      showToast(`Прокладаємо пішохідний маршрут до: ${state.activeRental.lockerName}`, 'info');
+      showToast('PIN скопійовано', 'info');
     }
   });
 
   // ==========================================
-  // 10. HISTORY SCREEN (SCREEN 4)
+  // 10. HISTORY (SCREEN 4)
   // ==========================================
 
   function renderHistory() {
     const container = document.getElementById('historyListContainer');
     container.innerHTML = '';
 
-    const totalCount = state.history.length;
-    let totalSpent = 0;
-
-    state.history.forEach(item => {
-      const match = item.totalPaid.match(/[\d.]+/);
-      if (match) totalSpent += parseFloat(match[0]);
-    });
-
-    document.getElementById('totalRentalsCount').textContent = totalCount;
-    document.getElementById('totalSpentCount').textContent = `${totalSpent.toFixed(0)} грн`;
-
     if (state.history.length === 0) {
       container.innerHTML = `
-        <div style="text-align:center; padding:48px 16px; color:#64748b; background:#fff; border-radius:14px; border:1px solid #e2e8f0;">
-          <i class="fa-solid fa-receipt" style="font-size:2.5rem; margin-bottom:12px; opacity:0.4;"></i>
-          <p style="font-size:1rem; font-weight:600;">У вас поки немає завершених оренд</p>
+        <div style="text-align:center; padding:36px; color:#94a3b8; background:#fff; border-radius:12px; border:1px solid #e2e8f0;">
+          <p style="font-size:0.95rem; font-weight:600;">У вас поки немає завершених оренд</p>
         </div>
       `;
       return;
@@ -899,18 +749,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const card = document.createElement('div');
       card.className = 'history-card';
       card.innerHTML = `
-        <div class="history-card-header">
-          <div>
-            <div class="history-loc-name">${item.lockerName}</div>
-            <div class="history-date">${item.date}</div>
-          </div>
-          <span class="history-status-tag">Завершено</span>
+        <div class="history-info-col">
+          <h4>${item.lockerName} • Комірка №${item.cellNum}</h4>
+          <p>${item.date} · ${item.duration}</p>
         </div>
-        <div class="history-card-body">
-          <span>Комірка <strong>№ ${item.cellNum}</strong> (Розмір ${item.size})</span>
-          <span>Тривалість: <strong>${item.duration}</strong></span>
-          <strong style="color:var(--primary); font-size:1.05rem;">${item.totalPaid}</strong>
-        </div>
+        <div class="history-amount">${item.totalPaid}</div>
       `;
       container.appendChild(card);
     });
@@ -918,7 +761,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('clearHistoryBtn').addEventListener('click', () => {
     if (state.history.length === 0) return;
-    if (confirm('Очистити історію оренд?')) {
+    if (confirm('Очистити історію?')) {
       state.history = [];
       saveHistory();
       renderHistory();
@@ -927,26 +770,21 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ==========================================
-  // 11. TOAST NOTIFICATIONS
+  // 11. TOAST
   // ==========================================
 
   function showToast(message, type = 'info') {
     const container = document.getElementById('toastContainer');
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
-
-    let icon = '<i class="fa-solid fa-circle-info"></i>';
-    if (type === 'success') icon = '<i class="fa-solid fa-circle-check"></i>';
-
-    toast.innerHTML = `${icon} <span>${message}</span>`;
+    toast.innerHTML = `<span>${message}</span>`;
     container.appendChild(toast);
 
     setTimeout(() => {
       toast.style.opacity = '0';
-      toast.style.transform = 'translateY(10px)';
       toast.style.transition = '0.3s ease';
       setTimeout(() => toast.remove(), 300);
-    }, 3200);
+    }, 2800);
   }
 
   // ==========================================
