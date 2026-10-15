@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
       lat: 50.0005,
       lng: 36.2305,
       distance: '120 м',
-      freeCells: 7
+      freeCells: 8
     },
     {
       id: 'loc-2',
@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
       lat: 49.9912,
       lng: 36.2342,
       distance: '350 м',
-      freeCells: 11
+      freeCells: 8
     },
     {
       id: 'loc-3',
@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
       lat: 49.9882,
       lng: 36.2045,
       distance: '850 м',
-      freeCells: 5
+      freeCells: 8
     },
     {
       id: 'loc-4',
@@ -259,7 +259,7 @@ document.addEventListener('DOMContentLoaded', () => {
       zoomControl: true
     }).setView(coords, 14);
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    L.tileLayer('https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png?key=cb1_4lca_1_771f025d3820d6c782919594', {
       maxZoom: 19,
       subdomains: 'abcd'
     }).addTo(state.map);
@@ -404,7 +404,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const grid = document.getElementById('compartmentsGrid');
     grid.innerHTML = '';
 
-    const total = 16;
+    const total = 12;
     for (let i = 1; i <= total; i++) {
       let cellSize = 'M';
       if (i <= 6) cellSize = 'S';
