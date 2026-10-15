@@ -2,8 +2,8 @@
 <html lang="uk">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>SmartLocker — Автоматична камера схову | ЛМВ Лабораторна №1</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartLocker — Автоматична камера схову | ХНУРЕ ЛМВ</title>
   
   <!-- Favicon -->
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📦</text></svg>">
@@ -22,10 +22,10 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body class="theme-light">
-  <!-- Top Navigation Bar for Platform & Academic Context -->
+  <!-- Top Application Header with Brand & Desktop Navigation -->
   <header class="app-header">
     <div class="header-container">
-      <div class="brand-group">
+      <div class="brand-group" id="brandLogoBtn" style="cursor: pointer;">
         <div class="brand-logo">
           <i class="fa-solid fa-box-archive"></i>
         </div>
@@ -35,11 +35,24 @@
         </div>
       </div>
 
-      <div class="header-controls">
-        <button id="viewModeToggle" class="control-btn" title="Перемкнути вигляд (Смартфон / Десктоп)">
-          <i class="fa-solid fa-mobile-screen"></i>
-          <span class="btn-text">Режим смартфона</span>
+      <!-- Desktop Navigation Menu -->
+      <nav class="desktop-nav-menu">
+        <button class="nav-link active" data-target="screen-map">
+          <i class="fa-solid fa-map-location-dot"></i>
+          <span>Пошук локера</span>
         </button>
+        <button class="nav-link" data-target="screen-rental" id="desktopNavRental">
+          <i class="fa-solid fa-key"></i>
+          <span>Моя оренда</span>
+          <span class="active-badge-dot" id="desktopRentalDot" style="display:none;"></span>
+        </button>
+        <button class="nav-link" data-target="screen-history">
+          <i class="fa-solid fa-clock-rotate-left"></i>
+          <span>Історія</span>
+        </button>
+      </nav>
+
+      <div class="header-controls">
         <button id="openDocsBtn" class="control-btn accent" title="Звіт та наукове обґрунтування ЛМВ">
           <i class="fa-solid fa-book-open"></i>
           <span class="btn-text">Звіт до лаби</span>
@@ -48,32 +61,19 @@
     </div>
   </header>
 
-  <!-- Main Application Wrapper -->
+  <!-- Main Application Workspace -->
   <main class="app-workspace">
-    <!-- Smartphone Mockup Wrapper (Adaptive for desktop & pure mobile) -->
-    <div class="phone-frame-container" id="phoneContainer">
-      <!-- Simulated Phone Bezel & Camera Notch -->
-      <div class="phone-speaker"></div>
-      <div class="phone-screen">
-        
-        <!-- Status Bar -->
-        <div class="phone-status-bar">
-          <span class="status-time" id="statusBarTime">14:30</span>
-          <div class="status-icons">
-            <i class="fa-solid fa-signal"></i>
-            <i class="fa-solid fa-wifi"></i>
-            <i class="fa-solid fa-battery-full"></i>
-          </div>
-        </div>
+    <div class="screens-viewport">
 
-        <!-- App Screen Container (Views will switch here) -->
-        <div class="screens-viewport">
-
-          <!-- ================= SCREEN 1: ГОЛОВНИЙ ЕКРАН (КАРТА ТА ЛОКЕРИ) ================= -->
-          <section id="screen-map" class="screen-view active">
-            <div class="view-header">
+      <!-- ================= SCREEN 1: ГОЛОВНИЙ ЕКРАН (КАРТА ТА ЛОКЕРИ) ================= -->
+      <section id="screen-map" class="screen-view active">
+        <div class="map-screen-desktop-layout">
+          
+          <!-- Left Column / Side Panel: Search & Lockers List -->
+          <div class="lockers-sidebar">
+            <div class="sidebar-header">
               <div class="greeting-box">
-                <span class="sub-greeting">Вітаємо у Харкові!</span>
+                <span class="sub-greeting">Харків • Публічні локації</span>
                 <h2 class="main-greeting">Знайдіть вільну комірку</h2>
               </div>
               <button class="icon-round-btn" id="refreshLocationsBtn" title="Оновити список">
@@ -81,59 +81,62 @@
               </button>
             </div>
 
-            <!-- Search & Quick Filters -->
+            <!-- Search Bar (without category pills) -->
             <div class="search-section">
               <div class="search-input-wrapper">
                 <i class="fa-solid fa-magnifying-glass search-icon"></i>
                 <input type="text" id="lockerSearchInput" placeholder="Пошук за адресою або орієнтиром..." autocomplete="off">
                 <button id="clearSearchBtn" class="clear-btn" style="display:none;"><i class="fa-solid fa-xmark"></i></button>
               </div>
-              <div class="quick-filters">
-                <button class="filter-pill active" data-filter="all">Всі локації</button>
-                <button class="filter-pill" data-filter="park">Парки & Сквери</button>
-                <button class="filter-pill" data-filter="station">Вокзали</button>
-                <button class="filter-pill" data-filter="mall">Торгові центри</button>
-              </div>
             </div>
 
-            <!-- Map Area -->
-            <div class="map-wrapper">
-              <div id="lockersMap" class="interactive-map"></div>
-              <div class="map-floating-actions">
-                <button class="map-action-btn" id="locateUserBtn" title="Моє розташування">
-                  <i class="fa-solid fa-location-crosshairs"></i>
-                </button>
-              </div>
-              <div class="map-legend-badge">
-                <span class="dot-available"></span> Вільні місця є
-              </div>
+            <!-- Lockers List Header -->
+            <div class="sheet-header">
+              <h3>Камери схову поблизу</h3>
+              <span class="badge-count" id="lockersCountBadge">4 локації</span>
             </div>
 
-            <!-- Bottom Sheet / Lockers List -->
-            <div class="lockers-list-sheet">
-              <div class="sheet-handle"></div>
-              <div class="sheet-header">
-                <h3>Найближчі камери схову</h3>
-                <span class="badge-count" id="lockersCountBadge">4 локації</span>
-              </div>
-
-              <div class="lockers-cards-container" id="lockersList">
-                <!-- Dynamically populated via JS -->
-              </div>
+            <!-- Lockers Cards Container -->
+            <div class="lockers-cards-container" id="lockersList">
+              <!-- Populated via JS -->
             </div>
-          </section>
+          </div>
 
-          <!-- ================= SCREEN 2: ВИБІР КОМІРКИ ТА БРОНЮВАННЯ ================= -->
-          <section id="screen-booking" class="screen-view">
-            <div class="screen-top-nav">
-              <button class="nav-back-btn" data-back-to="screen-map">
-                <i class="fa-solid fa-arrow-left"></i>
+          <!-- Right Column: Interactive Map -->
+          <div class="map-main-area">
+            <div id="lockersMap" class="interactive-map"></div>
+            
+            <div class="map-floating-actions">
+              <button class="map-action-btn" id="locateUserBtn" title="Моє розташування">
+                <i class="fa-solid fa-location-crosshairs"></i>
               </button>
-              <h2 class="nav-screen-title">Бронювання комірки</h2>
-              <div class="nav-placeholder"></div>
             </div>
 
-            <div class="scrollable-content">
+            <div class="map-legend-badge">
+              <span class="dot-available"></span> Вільні комірки в наявності
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ================= SCREEN 2: ВИБІР КОМІРКИ ТА БРОНЮВАННЯ ================= -->
+      <section id="screen-booking" class="screen-view">
+        <div class="screen-top-nav">
+          <button class="nav-back-btn" data-back-to="screen-map">
+            <i class="fa-solid fa-arrow-left"></i>
+            <span class="back-btn-label">До вибору локера</span>
+          </button>
+          <h2 class="nav-screen-title">Бронювання комірки</h2>
+          <div class="nav-placeholder"></div>
+        </div>
+
+        <div class="scrollable-content">
+          <div class="booking-desktop-grid">
+            
+            <!-- Left Column: Locker details and Compartment Matrix with prices -->
+            <div class="booking-left-col">
+              
               <!-- Selected Locker Summary Card -->
               <div class="selected-locker-card" id="bookingLockerSummary">
                 <div class="card-icon">
@@ -141,7 +144,7 @@
                 </div>
                 <div class="card-info">
                   <h3 id="bookingLockerName">Сад Шевченка (Біля фонтану)</h3>
-                  <p id="bookingLockerAddress"><i class="fa-solid fa-location-dot"></i> вул. Сумська, 35</p>
+                  <p id="bookingLockerAddress"><i class="fa-solid fa-location-dot"></i> вул. Сумська, 35, Харків</p>
                   <div class="tags-row">
                     <span class="tag-live"><i class="fa-solid fa-circle-check"></i> Цілодобово 24/7</span>
                     <span class="tag-dist" id="bookingLockerDistance">120 м від вас</span>
@@ -149,59 +152,14 @@
                 </div>
               </div>
 
-              <!-- Size Selection (S, M, L) based on Survey -->
+              <!-- Locker Compartment Selection Section -->
               <div class="booking-section-title">
-                <h3>1. Оберіть розмір комірки</h3>
-                <span class="subtitle-hint">Прозора вартість без прихованих комісій</span>
-              </div>
-
-              <div class="size-selector-grid">
-                <!-- Size S -->
-                <div class="size-card" data-size="S">
-                  <div class="size-badge">Розмір S</div>
-                  <div class="size-icon">
-                    <i class="fa-solid fa-bag-shopping"></i>
-                  </div>
-                  <div class="size-name">Мала комірка</div>
-                  <div class="size-specs">30 × 40 × 50 см • до 15 кг</div>
-                  <div class="size-desc">Шопінг-пакети, міський рюкзак, ноутбук</div>
-                  <div class="size-price">
-                    <span class="price-val">25</span> <span class="price-unit">грн/год</span>
+                <div class="section-title-row">
+                  <div>
+                    <h3>Оберіть номер комірки у шафі</h3>
+                    <span class="subtitle-hint">Вартість, розмір та статус вказані безпосередньо на кожній комірці</span>
                   </div>
                 </div>
-
-                <!-- Size M -->
-                <div class="size-card selected" data-size="M">
-                  <div class="size-badge popular">Популярний</div>
-                  <div class="size-icon">
-                    <i class="fa-solid fa-suitcase"></i>
-                  </div>
-                  <div class="size-name">Середня комірка</div>
-                  <div class="size-specs">45 × 60 × 60 см • до 25 кг</div>
-                  <div class="size-desc">Дорожня сумка, валіза для ручної поклажі</div>
-                  <div class="size-price">
-                    <span class="price-val">45</span> <span class="price-unit">грн/год</span>
-                  </div>
-                </div>
-
-                <!-- Size L -->
-                <div class="size-card" data-size="L">
-                  <div class="size-badge">Розмір L</div>
-                  <div class="size-icon">
-                    <i class="fa-solid fa-suitcase-rolling"></i>
-                  </div>
-                  <div class="size-name">Велика комірка</div>
-                  <div class="size-specs">60 × 80 × 80 см • до 40 кг</div>
-                  <div class="size-desc">Велика валіза, спорядження, кілька сумок</div>
-                  <div class="size-price">
-                    <span class="price-val">70</span> <span class="price-unit">грн/год</span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Visual Matrix of Locker Compartments -->
-              <div class="booking-section-title">
-                <h3>2. Оберіть номер комірки у шафі</h3>
                 <div class="cells-legend">
                   <span class="legend-item"><span class="dot free"></span> Вільна</span>
                   <span class="legend-item"><span class="dot chosen"></span> Обрана</span>
@@ -209,78 +167,112 @@
                 </div>
               </div>
 
+              <!-- Matrix of Locker Compartments -->
               <div class="compartments-matrix" id="compartmentsGrid">
-                <!-- Generated by JS -->
+                <!-- Generated by JS with cell number, size and price -->
               </div>
 
-              <!-- Expected Duration / Rental Estimate -->
-              <div class="booking-section-title">
-                <h3>3. Орієнтовна тривалість</h3>
-              </div>
-
-              <div class="duration-control-card">
-                <div class="duration-slider-header">
-                  <span>Попередня оцінка:</span>
-                  <strong id="durationLabel">2 години</strong>
+              <!-- Size Specifications Reference -->
+              <div class="size-specs-reference">
+                <div class="spec-pill">
+                  <span class="badge size-s">S</span>
+                  <div class="spec-desc"><strong>Мала:</strong> 30×40×50 см (до 15 кг) — <strong>25 грн/год</strong></div>
                 </div>
-                <input type="range" id="durationSlider" min="1" max="12" value="2" step="1" class="slider-input">
-                <div class="slider-ticks">
-                  <span>1 год</span>
-                  <span>3 год</span>
-                  <span>6 год</span>
-                  <span>12 год</span>
+                <div class="spec-pill">
+                  <span class="badge size-m">M</span>
+                  <div class="spec-desc"><strong>Середня:</strong> 45×60×60 см (до 25 кг) — <strong>45 грн/год</strong></div>
+                </div>
+                <div class="spec-pill">
+                  <span class="badge size-l">L</span>
+                  <div class="spec-desc"><strong>Велика:</strong> 60×80×80 см (до 40 кг) — <strong>70 грн/год</strong></div>
                 </div>
               </div>
 
-              <!-- Price Breakdown & No Hidden Fees Guarantee -->
-              <div class="price-calculation-card">
-                <div class="calc-row">
-                  <span>Базовий тариф (<span id="calcSizeName">Розмір M</span>)</span>
-                  <span id="calcBaseRate">45 грн / год</span>
+            </div>
+
+            <!-- Right Column: Estimate Calculation & Confirmation -->
+            <div class="booking-right-col">
+              <div class="sticky-calc-panel">
+                
+                <div class="booking-section-title">
+                  <h3>Орієнтовна тривалість оренди</h3>
+                  <span class="subtitle-hint">Завершити оренду або забрати речі можна будь-коли</span>
                 </div>
-                <div class="calc-row">
-                  <span>Розрахунковий час</span>
-                  <span id="calcHours">2 год</span>
+
+                <div class="duration-control-card">
+                  <div class="duration-slider-header">
+                    <span>Попередній час:</span>
+                    <strong id="durationLabel">2 години</strong>
+                  </div>
+                  <input type="range" id="durationSlider" min="1" max="12" value="2" step="1" class="slider-input">
+                  <div class="slider-ticks">
+                    <span>1 год</span>
+                    <span>3 год</span>
+                    <span>6 год</span>
+                    <span>12 год</span>
+                  </div>
                 </div>
-                <div class="calc-row highlight">
-                  <span>Попередня сума до сплати</span>
-                  <span class="calc-total" id="calcTotalSum">90.00 грн</span>
+
+                <!-- Price Breakdown & Transparency Guarantee -->
+                <div class="price-calculation-card">
+                  <div class="calc-row">
+                    <span>Обрана комірка</span>
+                    <strong id="calcCellBadge">Комірка № 14 (Розмір M)</strong>
+                  </div>
+                  <div class="calc-row">
+                    <span>Тариф комірки</span>
+                    <span id="calcBaseRate">45 грн / год</span>
+                  </div>
+                  <div class="calc-row">
+                    <span>Розрахунковий час</span>
+                    <span id="calcHours">2 год</span>
+                  </div>
+                  <div class="calc-row highlight">
+                    <span>Попередня сума до сплати</span>
+                    <span class="calc-total" id="calcTotalSum">90.00 грн</span>
+                  </div>
+                  <div class="calc-note">
+                    <i class="fa-solid fa-shield-halved"></i> Оплата списується лише після вашого підтвердження. Ніяких прихованих комісій!
+                  </div>
                 </div>
-                <div class="calc-note">
-                  <i class="fa-solid fa-shield-halved"></i> Оплата списується лише після вашого підтвердження. Завершити оренду можна будь-коли!
-                </div>
+
+                <!-- Action Button -->
+                <button class="primary-action-btn" id="proceedToPaymentBtn">
+                  <span class="btn-main-text">Забронювати комірку #<span id="btnCellNumber">14</span></span>
+                  <span class="btn-sub-price" id="btnPricePreview">90 грн</span>
+                </button>
+
               </div>
             </div>
 
-            <!-- Sticky Booking Action Button -->
-            <div class="sticky-footer-action">
-              <button class="primary-action-btn" id="proceedToPaymentBtn">
-                <span class="btn-main-text">Забронювати комірку #<span id="btnCellNumber">14</span></span>
-                <span class="btn-sub-price" id="btnPricePreview">90 грн</span>
-              </button>
-            </div>
-          </section>
+          </div>
+        </div>
+      </section>
 
-          <!-- ================= SCREEN 3: МОЯ ОРЕНДА (КВИТАНЦІЯ ТА ТАЙМЕР) ================= -->
-          <section id="screen-rental" class="screen-view">
-            <div class="screen-top-nav">
-              <button class="nav-back-btn" data-back-to="screen-map" title="На головну">
-                <i class="fa-solid fa-house"></i>
-              </button>
-              <h2 class="nav-screen-title">Моя оренда</h2>
-              <button class="icon-round-btn small" id="shareRentalBtn" title="Поділитися / Зберегти">
-                <i class="fa-solid fa-arrow-up-from-bracket"></i>
-              </button>
-            </div>
+      <!-- ================= SCREEN 3: МОЯ ОРЕНДА (КВИТАНЦІЯ ТА ТАЙМЕР) ================= -->
+      <section id="screen-rental" class="screen-view">
+        <div class="screen-top-nav">
+          <button class="nav-back-btn" data-back-to="screen-map" title="На головну">
+            <i class="fa-solid fa-map-location-dot"></i>
+            <span class="back-btn-label">До карти локерів</span>
+          </button>
+          <h2 class="nav-screen-title">Моя оренда</h2>
+          <button class="icon-round-btn small" id="shareRentalBtn" title="Поділитися / Зберегти реквізити">
+            <i class="fa-solid fa-arrow-up-from-bracket"></i>
+          </button>
+        </div>
 
-            <div class="scrollable-content">
-              <!-- Active Rental Status Badge -->
-              <div class="rental-status-banner">
-                <div class="pulse-indicator"></div>
-                <span class="status-title">Оренда активна • Речі у безпеці</span>
-              </div>
+        <div class="scrollable-content">
+          <!-- Active Rental Banner -->
+          <div class="rental-status-banner">
+            <div class="pulse-indicator"></div>
+            <span class="status-title">Оренда активна • Ваші речі у безпеці</span>
+          </div>
 
-              <!-- Main Locker Key Card (Metaphor: Digital Locker Key) -->
+          <div class="rental-desktop-grid">
+            
+            <!-- Left Column: The Digital Key Card & Huge Unlock Button -->
+            <div class="rental-main-col">
               <div class="digital-key-card">
                 <div class="key-header">
                   <div class="key-location">
@@ -291,7 +283,7 @@
                     </div>
                   </div>
                   <span class="security-shield" title="Під охороною 24/7">
-                    <i class="fa-solid fa-shield-check"></i> Охорона
+                    <i class="fa-solid fa-shield-check"></i> Охорона 24/7
                   </span>
                 </div>
 
@@ -301,18 +293,18 @@
                     <strong class="num" id="activeCellNum">№ 14</strong>
                   </div>
                   <div class="cell-specs-badge">
-                    <span class="lbl">Розмір</span>
-                    <strong class="val" id="activeCellSize">M (45×60 см)</strong>
+                    <span class="lbl">Розмір та тариф</span>
+                    <strong class="val" id="activeCellSize">M (45 грн/год)</strong>
                   </div>
                 </div>
 
                 <!-- Live Timer Counter -->
                 <div class="timer-display-box">
                   <span class="timer-label"><i class="fa-regular fa-clock"></i> Тривалість оренди</span>
-                  <div class="timer-digits" id="liveTimerDisplay">00:14:32</div>
+                  <div class="timer-digits" id="liveTimerDisplay">00:00:00</div>
                   <div class="timer-subinfo">
                     <span>Початок: <strong id="rentalStartTime">14:15</strong></span>
-                    <span>Поточна сума: <strong id="rentalCurrentCost">45.00 грн</strong></span>
+                    <span>Поточна нарахована сума: <strong id="rentalCurrentCost">45.00 грн</strong></span>
                   </div>
                 </div>
 
@@ -326,7 +318,7 @@
                   </div>
                 </div>
 
-                <!-- HUGE ONE-BUTTON OPEN METAPHOR (From Report Section 6) -->
+                <!-- HUGE ONE-BUTTON OPEN METAPHOR -->
                 <div class="open-action-wrapper">
                   <button class="unlock-cell-btn" id="unlockCellBtn">
                     <div class="unlock-btn-icon">
@@ -334,7 +326,7 @@
                     </div>
                     <div class="unlock-btn-content">
                       <span class="unlock-main-text">ВІДКРИТИ КОМІРКУ</span>
-                      <span class="unlock-sub-text">Натисніть для дистанційного відкриття</span>
+                      <span class="unlock-sub-text">Натисніть для дистанційного відкриття замка</span>
                     </div>
                   </button>
                   <p class="unlock-safety-hint">
@@ -342,24 +334,28 @@
                   </p>
                 </div>
               </div>
+            </div>
 
-              <!-- Backup Access: QR & PIN (Discovered during user interviews) -->
+            <!-- Right Column: Backup Access, Directions & Completion -->
+            <div class="rental-side-col">
+              
+              <!-- Backup Access: QR & PIN -->
               <div class="backup-access-card">
                 <div class="backup-card-header">
                   <h4><i class="fa-solid fa-qrcode"></i> Резервний доступ</h4>
-                  <span class="badge-hint">Якщо розрядився телефон</span>
+                  <span class="badge-hint">Якщо розрядився смартфон</span>
                 </div>
-                <p class="backup-text">Введіть PIN-код на фізичній клавіатурі локера або скануйте QR-код:</p>
+                <p class="backup-text">Введіть PIN-код на клавіатурі локера або скануйте QR-код на оптичному терміналі:</p>
                 
                 <div class="pin-qr-row">
                   <div class="pin-display">
                     <span class="pin-label">Ваш PIN-код:</span>
                     <strong class="pin-code" id="rentalPinCode">849-216</strong>
-                    <button class="copy-pin-btn" id="copyPinBtn" title="Скопіювати"><i class="fa-solid fa-copy"></i></button>
+                    <button class="copy-pin-btn" id="copyPinBtn" title="Скопіювати PIN"><i class="fa-solid fa-copy"></i></button>
                   </div>
                   <div class="qr-thumbnail-btn" id="showQrModalBtn" title="Збільшити QR-код">
                     <div class="qr-mock" id="qrMockContainer"></div>
-                    <span>QR для термінала</span>
+                    <span>Збільшити QR</span>
                   </div>
                 </div>
               </div>
@@ -370,7 +366,7 @@
                   <i class="fa-solid fa-diamond-turn-right dir-icon"></i>
                   <div>
                     <h4>Як дістатися до речей?</h4>
-                    <p>Локер розташований біля центрального фонтану, праворуч від алеї.</p>
+                    <p id="rentalLockerHint">Локер розташований біля центрального фонтану, праворуч від алеї.</p>
                   </div>
                 </div>
                 <button class="route-btn" id="openRouteBtn">
@@ -384,143 +380,70 @@
                   <i class="fa-solid fa-circle-check"></i> Забрати всі речі та завершити оренду
                 </button>
               </div>
-            </div>
-          </section>
 
-          <!-- ================= SCREEN 4: ІСТОРІЯ ОРЕНД ТА ПРОФІЛЬ ================= -->
-          <section id="screen-history" class="screen-view">
-            <div class="screen-top-nav">
-              <h2 class="nav-screen-title">Історія оренд</h2>
-              <button class="icon-round-btn small" id="clearHistoryBtn" title="Очистити історію">
-                <i class="fa-solid fa-trash-can"></i>
-              </button>
             </div>
 
-            <div class="scrollable-content">
-              <div class="history-stats-banner">
-                <div class="stat-box">
-                  <span class="stat-num" id="totalRentalsCount">1</span>
-                  <span class="stat-lbl">Оренд</span>
-                </div>
-                <div class="stat-divider"></div>
-                <div class="stat-box">
-                  <span class="stat-num" id="totalHoursCount">2.5 год</span>
-                  <span class="stat-lbl">Збережено</span>
-                </div>
-                <div class="stat-divider"></div>
-                <div class="stat-box">
-                  <span class="stat-num" id="totalSpentCount">112 грн</span>
-                  <span class="stat-lbl">Витрачено</span>
-                </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= SCREEN 4: ІСТОРІЯ ОРЕНД ================= -->
+      <section id="screen-history" class="screen-view">
+        <div class="screen-top-nav">
+          <button class="nav-back-btn" data-back-to="screen-map" title="На головну">
+            <i class="fa-solid fa-map-location-dot"></i>
+            <span class="back-btn-label">До карти</span>
+          </button>
+          <h2 class="nav-screen-title">Історія ваших оренд</h2>
+          <button class="icon-round-btn small" id="clearHistoryBtn" title="Очистити історію">
+            <i class="fa-solid fa-trash-can"></i>
+          </button>
+        </div>
+
+        <div class="scrollable-content">
+          <div class="history-content-wrapper">
+            <div class="history-stats-banner">
+              <div class="stat-box">
+                <span class="stat-num" id="totalRentalsCount">1</span>
+                <span class="stat-lbl">Успішних оренд</span>
               </div>
-
-              <div class="history-list-container" id="historyListContainer">
-                <!-- Dynamically generated -->
+              <div class="stat-divider"></div>
+              <div class="stat-box">
+                <span class="stat-num" id="totalHoursCount">2.5 год</span>
+                <span class="stat-lbl">Час збереження</span>
+              </div>
+              <div class="stat-divider"></div>
+              <div class="stat-box">
+                <span class="stat-num" id="totalSpentCount">112 грн</span>
+                <span class="stat-lbl">Всього сплачено</span>
               </div>
             </div>
-          </section>
 
-        </div> <!-- /screens-viewport -->
-
-        <!-- Bottom Navigation Bar (Thumb ergonomic) -->
-        <nav class="bottom-tab-bar">
-          <button class="tab-item active" data-target="screen-map">
-            <i class="fa-solid fa-map"></i>
-            <span>Пошук</span>
-          </button>
-          <button class="tab-item" data-target="screen-booking" id="tabBooking">
-            <i class="fa-solid fa-box-open"></i>
-            <span>Комірки</span>
-          </button>
-          <button class="tab-item has-badge" data-target="screen-rental" id="tabRental">
-            <i class="fa-solid fa-key"></i>
-            <span>Моя оренда</span>
-            <span class="active-badge-dot" id="rentalActiveDot" style="display:none;"></span>
-          </button>
-          <button class="tab-item" data-target="screen-history">
-            <i class="fa-solid fa-clock-rotate-left"></i>
-            <span>Історія</span>
-          </button>
-        </nav>
-
-      </div> <!-- /phone-screen -->
-    </div> <!-- /phone-frame-container -->
-
-    <!-- Desktop Companion Panel: Live State & Lab Report Highlights -->
-    <aside class="desktop-side-panel">
-      <!-- Quick Info / Student Attribution Card -->
-      <div class="academic-badge-card">
-        <div class="badge-header">
-          <span class="badge-nure">ХНУРЕ • Кафедра КН</span>
-          <span class="badge-year">2026</span>
-        </div>
-        <h3 class="badge-title">Людино-машинна взаємодія</h3>
-        <p class="badge-desc">Лабораторна робота №1: «Побудова та програмна реалізація моделей, що використовуються у процесі розробки інтерфейсів»</p>
-        <div class="badge-meta">
-          <div><i class="fa-regular fa-user"></i> <strong>Студент:</strong> Варіант камери схову</div>
-          <div><i class="fa-solid fa-user-tie"></i> <strong>Викладач:</strong> доц. Мельнікова Р.В.</div>
-        </div>
-      </div>
-
-      <!-- Quick Concept Summary -->
-      <div class="side-card">
-        <h4 class="side-card-title"><i class="fa-solid fa-lightbulb"></i> Реалізовані принципи ЛМВ</h4>
-        <ul class="principles-list">
-          <li>
-            <strong>Метафора «Ключа»:</strong>
-            <span>Дистанційна велика кнопка відчинення дверцят замість фізичного ключа.</span>
-          </li>
-          <li>
-            <strong>Метафора «Номерка»:</strong>
-            <span>Екран «Моя оренда» зберігає номер шафки, розташування та нараховану вартість.</span>
-          </li>
-          <li>
-            <strong>Принцип ергономіки:</strong>
-            <span>Зручність керування однією рукою на вулиці при яскравому освітленні.</span>
-          </li>
-          <li>
-            <strong>Відсутність прихованих дій:</strong>
-            <span>Підтвердження вартості до списання коштів та перевірка відчинення.</span>
-          </li>
-        </ul>
-      </div>
-
-      <!-- Interactive Storyboard Preview -->
-      <div class="side-card">
-        <h4 class="side-card-title"><i class="fa-solid fa-film"></i> Сторіборд взаємодії</h4>
-        <div class="storyboard-steps">
-          <div class="story-step" data-step="1">
-            <span class="step-num">1</span>
-            <div><strong>Шопінг / Важкі речі</strong><p>Користувачка має громіздкі пакети в парку.</p></div>
-          </div>
-          <div class="story-step" data-step="2">
-            <span class="step-num">2</span>
-            <div><strong>Пошук на карті</strong><p>Знаходить найближчий вільний локер за 120 м.</p></div>
-          </div>
-          <div class="story-step" data-step="3">
-            <span class="step-num">3</span>
-            <div><strong>Вибір та оренда</strong><p>Обирає комірку розміру M та сплачує в один клік.</p></div>
-          </div>
-          <div class="story-step" data-step="4">
-            <span class="step-num">4</span>
-            <div><strong>Залишає речі</strong><p>Комірка відчиняється, речі складено, дверцята зачинено.</p></div>
-          </div>
-          <div class="story-step" data-step="5">
-            <span class="step-num">5</span>
-            <div><strong>Контроль у застосунку</strong><p>Гуляє вільно; таймер і місце завжди на екрані.</p></div>
-          </div>
-          <div class="story-step" data-step="6">
-            <span class="step-num">6</span>
-            <div><strong>Миттєве отримання</strong><p>Підходить до локера, натискає «Відкрити» і забирає речі.</p></div>
+            <div class="history-list-container" id="historyListContainer">
+              <!-- Dynamically generated -->
+            </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      <!-- Action Button to Open Full Lab Report -->
-      <button class="view-full-docs-btn" id="openFullReportBtn">
-        <i class="fa-solid fa-file-lines"></i> Читати повний звіт та таблиці опитування
+    </div> <!-- /screens-viewport -->
+
+    <!-- Mobile Bottom Navigation Bar (Thumb ergonomic for phones) -->
+    <nav class="bottom-tab-bar">
+      <button class="tab-item active" data-target="screen-map">
+        <i class="fa-solid fa-map"></i>
+        <span>Пошук</span>
       </button>
-    </aside>
+      <button class="tab-item has-badge" data-target="screen-rental" id="tabRental">
+        <i class="fa-solid fa-key"></i>
+        <span>Моя оренда</span>
+        <span class="active-badge-dot" id="rentalActiveDot" style="display:none;"></span>
+      </button>
+      <button class="tab-item" data-target="screen-history">
+        <i class="fa-solid fa-clock-rotate-left"></i>
+        <span>Історія</span>
+      </button>
+    </nav>
   </main>
 
   <!-- ================= MODALS & OVERLAYS ================= -->
@@ -544,7 +467,7 @@
           </div>
           <div class="summary-line">
             <span>Обрана комірка</span>
-            <strong id="modalCellDetails">№ 14 (Розмір M)</strong>
+            <strong id="modalCellDetails">№ 14 (Розмір M, 45 грн/год)</strong>
           </div>
           <div class="summary-line">
             <span>Попередній час</span>
@@ -552,7 +475,7 @@
           </div>
           <div class="summary-divider"></div>
           <div class="summary-line total">
-            <span>Сума до оплати</span>
+            <span>Сума до сплати</span>
             <strong class="total-price" id="modalTotalPrice">90.00 грн</strong>
           </div>
         </div>
@@ -571,7 +494,7 @@
               <input type="radio" name="payMethod" value="card">
               <div class="method-inner">
                 <i class="fa-regular fa-credit-card"></i>
-                <span>Картка</span>
+                <span>Банківська картка</span>
               </div>
             </label>
           </div>
@@ -592,21 +515,20 @@
     </div>
   </dialog>
 
-  <!-- Modal: Locker Door Opened Notification (Figure 4 in Report) -->
+  <!-- Modal: Locker Door Opened Notification -->
   <dialog id="doorOpenedModal" class="app-dialog success-dialog">
     <div class="dialog-content text-center">
       <div class="success-animated-icon">
-        <div class="icon-ring"></div>
         <i class="fa-solid fa-door-open"></i>
       </div>
 
       <h3 class="success-title">Комірку № <span id="openedCellNum">14</span> відчинено!</h3>
       <p class="success-desc">
-        Електромагнітний замок розблоковано. Будь ласка, заберіть свої речі або покладіть багаж і щільно зачиніть дверцята.
+        Електромагнітний замок розблоковано. Заберіть свої речі або покладіть багаж і щільно зачиніть дверцята.
       </p>
 
       <div class="safety-checklist">
-        <div class="check-item"><i class="fa-solid fa-circle-check"></i> Світлодіод на комірці підсвічено зеленим</div>
+        <div class="check-item"><i class="fa-solid fa-circle-check"></i> Світлодіод на комірці підсвічено зеленим кольором</div>
         <div class="check-item"><i class="fa-solid fa-circle-check"></i> Дверцята автоматично заблокуються після закриття</div>
       </div>
 
@@ -646,7 +568,7 @@
     <div class="dialog-content docs-container">
       <div class="dialog-header docs-header">
         <div class="docs-header-titles">
-          <span class="report-org">Міністерство освіти і науки України • ХНУРЕ</span>
+          <span class="report-org">Міністерство освіти і науки України • ХНУРЕ • Кафедра КН</span>
           <h2>Звіт з лабораторної роботи №1 з дисципліни «ЛМВ»</h2>
           <p>«Побудова та програмна реалізація моделей, що використовуються у процесі розробки інтерфейсів»</p>
         </div>
@@ -654,7 +576,6 @@
       </div>
 
       <div class="dialog-body docs-body">
-        
         <!-- Section 1: Meta -->
         <article class="doc-section">
           <h3>1 Мета роботи</h3>
@@ -664,11 +585,11 @@
         <!-- Section 2: Domain & Users -->
         <article class="doc-section">
           <h3>2 Опис проблемної області та користувачів</h3>
-          <p><strong>Обрана проблемна область:</strong> автоматична камера схову, розташована в публічному місці (парк, вокзал, торговий центр, туристична локація). Під час прогулянки містом людина часто має важкі або громіздкі речі: пакети з покупками, рюкзак, валізу. Носити їх із собою незручно, а традиційні камери схову працюють лише за графіком, потребують персоналу та готівкових розрахунків. Програмний продукт має дати змогу знайти найближчий вільний локер, забронювати комірку, залишити речі, у будь-який момент переглянути, де саме вони знаходяться, і відкрити комірку дистанційно, без контакту та без персоналу.</p>
+          <p><strong>Обрана проблемна область:</strong> автоматична камера схову, розташована в публічному місці (парк, вокзал, торговий центр, туристична локація). Під час прогулянки містом людина часто має важкі або громіздкі речі: пакети з покупками, рюкзак, валізу. Носити їх із собою незручно, а традиційні камери схову працюють лише за графіком, потребують персоналу та готівкових розрахунків. Програмний продукт дає змогу знайти найближчий вільний локер, забронювати комірку, залишити речі, у будь-який момент переглянути, де саме вони знаходяться, і відкрити комірку дистанційно, без контакту та без персоналу.</p>
           <div class="user-roles-grid">
             <div class="role-card">
               <h4>Клієнт (основний користувач)</h4>
-              <p>Шукає локер, бронює комірку, оплачує оренду, відкриває дверцята через застосунок. Поспішає, руки зайняті речами, на вулиці можливе погане освітлення. Потребує простого інтерфейсу з великими кнопками.</p>
+              <p>Шукає локер, бронює комірку, оплачує оренду, відкриває дверцята через застосунок. Поспішає, руки зайняті речами, на вулиці можливе яскраве освітлення. Потребує простого інтерфейсу з великими кнопками.</p>
             </div>
             <div class="role-card">
               <h4>Оператор (непрямий користувач)</h4>
@@ -745,19 +666,19 @@
               <tbody>
                 <tr>
                   <td>Пошук найближчого локера на карті</td>
-                  <td><span class="status-badge ok"><i class="fa-solid fa-check"></i> Реалізовано: інтерактивна карта Leaflet</span></td>
+                  <td><span class="status-badge ok"><i class="fa-solid fa-check"></i> Реалізовано: карта зі списком локерів</span></td>
                 </tr>
                 <tr>
                   <td>Вибір вільної комірки потрібного розміру</td>
-                  <td><span class="status-badge ok"><i class="fa-solid fa-check"></i> Реалізовано: вибір розміру (S/M/L) та сітка комірок</span></td>
+                  <td><span class="status-badge ok"><i class="fa-solid fa-check"></i> Реалізовано: сітка комірок з цінами S/M/L</span></td>
                 </tr>
                 <tr>
                   <td>Зрозуміла вартість до оплати</td>
-                  <td><span class="status-badge ok"><i class="fa-solid fa-check"></i> Реалізовано: попередній прозорий калькулятор</span></td>
+                  <td><span class="status-badge ok"><i class="fa-solid fa-check"></i> Реалізовано: прозорий калькулятор вартості</span></td>
                 </tr>
                 <tr>
                   <td>Відкриття комірки однією кнопкою</td>
-                  <td><span class="status-badge ok"><i class="fa-solid fa-check"></i> Реалізовано: велика кнопка-ключ та звуковий відгук</span></td>
+                  <td><span class="status-badge ok"><i class="fa-solid fa-check"></i> Реалізовано: цифрова кнопка-ключ зі звуковим відгуком</span></td>
                 </tr>
                 <tr>
                   <td>Перегляд розташування комірки та таймера</td>
@@ -765,14 +686,14 @@
                 </tr>
                 <tr>
                   <td>Відкриття за QR-кодом, резервний PIN, історія оренд</td>
-                  <td><span class="status-badge ok"><i class="fa-solid fa-check"></i> Реалізовано: повний функціонал у прототипі</span></td>
+                  <td><span class="status-badge ok"><i class="fa-solid fa-check"></i> Реалізовано: QR, 6-значний PIN та екран історії</span></td>
                 </tr>
               </tbody>
             </table>
           </div>
         </article>
 
-        <!-- Section 4: Conceptual model -->
+        <!-- Section 4: Conceptual Model -->
         <article class="doc-section">
           <h3>4 Концептуальна модель користувача</h3>
           <p><strong>Користувач:</strong> клієнт, який хоче тимчасово залишити речі в публічному місці.</p>
@@ -786,34 +707,33 @@
           <div class="designer-blocks">
             <div class="designer-box">
               <h4>Блок 1. Подача інформації</h4>
-              <p>Світла нейтральна палітра з одним акцентним кольором (електричний індиго) для головних кнопок; карта займає ключову позицію, список локерів розташовано під нею; шрифт без засічок Plus Jakarta Sans; великі кнопки (понад 50px у висоту) зі зручним підписом для керування однією рукою; кольорове та текстове кодування станів комірок (вільна / зайнята / обрана).</p>
+              <p>Світла нейтральна палітра з одним акцентним кольором (електричний індиго #2563eb); карта займає ключове просторове місце, перелік локерів розташовано поруч; шрифт без засічок Plus Jakarta Sans; великі кнопки (понад 50px) зі зрозумілими підписами; кольорове та світлодіодне кодування станів комірок (вільна / зайнята / обрана) із відображенням тарифу.</p>
             </div>
             <div class="designer-box">
               <h4>Блок 2. Взаємодія користувача</h4>
-              <p>Миттєвий сенсорний відгук (звук розблокування замка, візуальні анімації підтвердження); підтвердження замовлення перед оплатою; мінімум дій: всього 3 кроки від пошуку до відчинення комірки.</p>
+              <p>Миттєвий сенсорний відгук (звук розблокування замка, анімації); підтвердження замовлення перед оплатою; всього 3 кроки від пошуку до відчинення комірки.</p>
             </div>
             <div class="designer-box">
               <h4>Блок 3. Метафори та афорданс</h4>
               <ul>
-                <li><strong>Метафора ключа від шафки:</strong> кнопка «Відкрити комірку» замінює ключ.</li>
+                <li><strong>Метафора ключа від шафки:</strong> кнопка «Відкрити комірку» замінює фізичний ключ.</li>
                 <li><strong>Метафора квитанції камери схову:</strong> екран «Моя оренда» як цифровий номерок.</li>
-                <li><strong>Афорданс:</strong> чітка різниця між активними зеленими комірками та приглушеними недоступними зайнятими комірками.</li>
+                <li><strong>Афорданс:</strong> вільні комірки виглядають активними та клікабельними, зайняті — неактивні й приглушені.</li>
               </ul>
             </div>
           </div>
         </article>
 
-        <!-- Section 7 & 8: UI Style & Prototype Results -->
+        <!-- Section 7-9: Conclusions -->
         <article class="doc-section">
           <h3>7-9 Висновки та реалізація</h3>
-          <p>Графічний веб-інтерфейс (GUI з WUI) створено у форматі мобільного веб-додатку, оптимізованого для використання як на смартфонах, так і на великих екранах. Повністю реалізовано всі 4 рисунки прототипу зі звіту (Головний екран з картою, вибір комірки, екран поточної оренди з живим таймером, відкриття комірки однією кнопкою), а також напрями подальшого розвитку (QR-код, PIN-код та журнал історії оренд).</p>
+          <p>Створено повноцінну адаптивну десктопну та мобільну систему автоматичної камери схову на основі GUI та WUI. Інтерфейс підтримує керування як мишею на великих екранах, так і сенсорним введенням на смартфонах.</p>
         </article>
-
       </div>
 
       <div class="dialog-footer">
         <button class="btn-confirm-pay" id="closeReportDocsBtnBottom">
-          Повернутися до інтерактивного додатку
+          Повернутися до роботи з камерою схову
         </button>
       </div>
     </div>

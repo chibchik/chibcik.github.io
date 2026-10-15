@@ -1,7 +1,7 @@
 /**
  * SmartLocker — Автоматична камера схову
  * Лабораторна робота № 1 з дисципліни «Людино-машинна взаємодія» (ХНУРЕ)
- * Реалізація концептуальної моделі та моделі проектувальника
+ * Десктопна та мобільна реалізація інтерфейсу
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -14,7 +14,6 @@ document.addEventListener('DOMContentLoaded', () => {
       id: 'loc-1',
       name: 'Сад Шевченка (Центральний фонтан)',
       address: 'вул. Сумська, 35, Харків',
-      category: 'park',
       lat: 50.0005,
       lng: 36.2305,
       distance: '120 м',
@@ -27,7 +26,6 @@ document.addEventListener('DOMContentLoaded', () => {
       id: 'loc-2',
       name: 'ТРЦ «Нікольський»',
       address: 'вул. Григорія Сковороди, 2А, Харків',
-      category: 'mall',
       lat: 49.9912,
       lng: 36.2342,
       distance: '350 м',
@@ -40,7 +38,6 @@ document.addEventListener('DOMContentLoaded', () => {
       id: 'loc-3',
       name: 'Харків-Пасажирський (Південний вокзал)',
       address: 'Привокзальний майдан, 1, Харків',
-      category: 'station',
       lat: 49.9882,
       lng: 36.2045,
       distance: '850 м',
@@ -53,7 +50,6 @@ document.addEventListener('DOMContentLoaded', () => {
       id: 'loc-4',
       name: 'Саржин Яр (Джерело & Парк)',
       address: 'вул. Отакара Яроша / Саржинська, Харків',
-      category: 'park',
       lat: 50.0210,
       lng: 36.2312,
       distance: '1.4 км',
@@ -76,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
     selectedSize: 'M',
     selectedCellNum: 14,
     estimatedHours: 2,
-    activeRental: null, // Loaded from localStorage or null
+    activeRental: null,
     history: [],
     map: null,
     mapMarkers: []
@@ -103,7 +99,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       
       const now = audioCtx.currentTime;
-      // Mechanical "click-clack" frequency synthesis
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
       osc.type = 'triangle';
@@ -118,7 +113,6 @@ document.addEventListener('DOMContentLoaded', () => {
       osc.start(now);
       osc.stop(now + 0.12);
 
-      // Second bounce click
       setTimeout(() => {
         if (!audioCtx) return;
         const now2 = audioCtx.currentTime;
@@ -156,7 +150,6 @@ document.addEventListener('DOMContentLoaded', () => {
       if (savedHistory) {
         state.history = JSON.parse(savedHistory);
       } else {
-        // Initial sample history record for demonstration
         state.history = [
           {
             id: 'hist-1',
@@ -206,8 +199,16 @@ document.addEventListener('DOMContentLoaded', () => {
     'screen-history': document.getElementById('screen-history')
   };
 
-  const tabButtons = document.querySelectorAll('.bottom-tab-bar .tab-item');
+  const desktopNavLinks = document.querySelectorAll('.desktop-nav-menu .nav-link');
+  const mobileTabButtons = document.querySelectorAll('.bottom-tab-bar .tab-item');
   const rentalActiveDot = document.getElementById('rentalActiveDot');
+  const desktopRentalDot = document.getElementById('desktopRentalDot');
+
+  function updateNavigationDots() {
+    const isRenting = Boolean(state.activeRental);
+    if (rentalActiveDot) rentalActiveDot.style.display = isRenting ? 'inline-block' : 'none';
+    if (desktopRentalDot) desktopRentalDot.style.display = isRenting ? 'inline-block' : 'none';
+  }
 
   function switchScreen(screenId) {
     Object.keys(screens).forEach(id => {
@@ -216,18 +217,25 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    // Update active tab button
-    tabButtons.forEach(btn => {
+    // Update desktop nav
+    desktopNavLinks.forEach(link => {
+      const target = link.getAttribute('data-target');
+      link.classList.toggle('active', target === screenId);
+    });
+
+    // Update mobile tab buttons
+    mobileTabButtons.forEach(btn => {
       const target = btn.getAttribute('data-target');
       btn.classList.toggle('active', target === screenId);
     });
 
-    // Invalidate map size if switching to map
+    // Invalidate map size
     if (screenId === 'screen-map' && state.map) {
       setTimeout(() => state.map.invalidateSize(), 200);
     }
 
-    // Scroll container to top
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     const activeView = screens[screenId];
     if (activeView) {
       const scrollable = activeView.querySelector('.scrollable-content');
@@ -235,19 +243,33 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Tab buttons click
-  tabButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-      const target = btn.getAttribute('data-target');
-      // If user clicks on 'screen-rental' but has no active rental
-      if (target === 'screen-rental' && !state.activeRental) {
-        showToast('У вас наразі немає активної оренди. Оберіть вільну комірку!', 'info');
-        switchScreen('screen-booking');
-        return;
-      }
-      switchScreen(target);
+  // Navigation handlers
+  function handleNavClick(target) {
+    if (target === 'screen-rental' && !state.activeRental) {
+      showToast('У вас наразі немає активної оренди. Оберіть вільну комірку!', 'info');
+      switchScreen('screen-booking');
+      return;
+    }
+    switchScreen(target);
+  }
+
+  desktopNavLinks.forEach(link => {
+    link.addEventListener('click', () => {
+      handleNavClick(link.getAttribute('data-target'));
     });
   });
+
+  mobileTabButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      handleNavClick(btn.getAttribute('data-target'));
+    });
+  });
+
+  // Brand logo click goes to map
+  const brandLogoBtn = document.getElementById('brandLogoBtn');
+  if (brandLogoBtn) {
+    brandLogoBtn.addEventListener('click', () => switchScreen('screen-map'));
+  }
 
   // Back buttons
   document.querySelectorAll('.nav-back-btn').forEach(btn => {
@@ -257,19 +279,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Header View Mode Switcher
-  const viewModeToggle = document.getElementById('viewModeToggle');
-  viewModeToggle.addEventListener('click', () => {
-    document.body.classList.toggle('full-width-mode');
-    const isFull = document.body.classList.contains('full-width-mode');
-    viewModeToggle.querySelector('.btn-text').textContent = isFull ? 'Мобільний фрейм' : 'Режим смартфона';
-    if (state.map) setTimeout(() => state.map.invalidateSize(), 300);
-  });
-
   // Academic Docs Modals
   const reportDocsModal = document.getElementById('reportDocsModal');
   const openDocsBtn = document.getElementById('openDocsBtn');
-  const openFullReportBtn = document.getElementById('openFullReportBtn');
   const closeReportDocsBtn = document.getElementById('closeReportDocsBtn');
   const closeReportDocsBtnBottom = document.getElementById('closeReportDocsBtnBottom');
 
@@ -283,28 +295,15 @@ document.addEventListener('DOMContentLoaded', () => {
     else reportDocsModal.removeAttribute('open');
   }
 
-  openDocsBtn.addEventListener('click', openDocs);
-  openFullReportBtn.addEventListener('click', openDocs);
-  closeReportDocsBtn.addEventListener('click', closeDocs);
-  closeReportDocsBtnBottom.addEventListener('click', closeDocs);
-
-  // Status Bar live clock
-  function updateClock() {
-    const now = new Date();
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    const el = document.getElementById('statusBarTime');
-    if (el) el.textContent = `${hours}:${minutes}`;
-  }
-  setInterval(updateClock, 1000);
-  updateClock();
+  if (openDocsBtn) openDocsBtn.addEventListener('click', openDocs);
+  if (closeReportDocsBtn) closeReportDocsBtn.addEventListener('click', closeDocs);
+  if (closeReportDocsBtnBottom) closeReportDocsBtnBottom.addEventListener('click', closeDocs);
 
   // ==========================================
   // 4. MAP & LOCKER DISCOVERY (SCREEN 1)
   // ==========================================
 
   function initMap() {
-    // Center on Kharkiv downtown (near Shevchenko Park)
     const initialCoords = [50.000, 36.230];
     
     state.map = L.map('lockersMap', {
@@ -312,38 +311,34 @@ document.addEventListener('DOMContentLoaded', () => {
       attributionControl: false
     }).setView(initialCoords, 14);
 
-    // CartoDB Positron / OSM tiles for clean light aesthetic
     L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
       maxZoom: 19,
       subdomains: 'abcd'
     }).addTo(state.map);
 
-    // Add zoom control at bottom right
     L.control.zoom({ position: 'bottomright' }).addTo(state.map);
 
     renderMapMarkers(LOCKER_LOCATIONS);
   }
 
   function renderMapMarkers(locations) {
-    // Clear old markers
     state.mapMarkers.forEach(m => state.map.removeLayer(m));
     state.mapMarkers = [];
 
     locations.forEach(loc => {
-      // Custom HTML Marker matching high contrast requirements
       const markerHtml = `
         <div class="custom-map-pin ${loc.id === state.selectedLocker.id ? 'active' : ''}" style="
           background: #2563eb;
           color: #fff;
-          padding: 6px 10px;
+          padding: 6px 12px;
           border-radius: 20px;
           border: 2px solid #fff;
-          box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.3);
           font-weight: 800;
           font-size: 11px;
           display: flex;
           align-items: center;
-          gap: 5px;
+          gap: 6px;
           white-space: nowrap;
           cursor: pointer;
         ">
@@ -355,8 +350,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const customIcon = L.divIcon({
         className: 'locker-leaflet-marker',
         html: markerHtml,
-        iconSize: [85, 30],
-        iconAnchor: [42, 15]
+        iconSize: [95, 32],
+        iconAnchor: [47, 16]
       });
 
       const marker = L.marker([loc.lat, loc.lng], { icon: customIcon }).addTo(state.map);
@@ -372,17 +367,14 @@ document.addEventListener('DOMContentLoaded', () => {
   function selectLocker(locker) {
     state.selectedLocker = locker;
     
-    // Pan to marker
     if (state.map) {
       state.map.panTo([locker.lat, locker.lng], { animate: true });
     }
 
-    // Highlight card in list
     document.querySelectorAll('.locker-card').forEach(card => {
       card.classList.toggle('highlighted', card.getAttribute('data-id') === locker.id);
     });
 
-    // Update Screen 2 Booking summary
     updateBookingSummary();
   }
 
@@ -393,7 +385,7 @@ document.addEventListener('DOMContentLoaded', () => {
     badge.textContent = `${locations.length} локації`;
 
     if (locations.length === 0) {
-      container.innerHTML = `<div style="text-align:center; padding:20px; color:#64748b; font-size:0.85rem;">За вашим запитом камер схову не знайдено</div>`;
+      container.innerHTML = `<div style="text-align:center; padding:30px; color:#64748b; font-size:0.9rem;">За вашим запитом камер схову не знайдено</div>`;
       return;
     }
 
@@ -413,7 +405,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="card-footer">
           <span class="free-cells-count"><i class="fa-solid fa-circle-check"></i> ${loc.freeCells} вільних комірок</span>
           <button class="btn-select-locker">
-            Обрати <i class="fa-solid fa-chevron-right"></i>
+            Обрати локер <i class="fa-solid fa-chevron-right"></i>
           </button>
         </div>
       `;
@@ -427,23 +419,18 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Search & Filtering
+  // Search without category pills
   const searchInput = document.getElementById('lockerSearchInput');
   const clearSearchBtn = document.getElementById('clearSearchBtn');
-  const filterPills = document.querySelectorAll('.filter-pill');
 
   function filterLockers() {
     const query = searchInput.value.trim().toLowerCase();
-    const activeFilterBtn = document.querySelector('.filter-pill.active');
-    const category = activeFilterBtn ? activeFilterBtn.getAttribute('data-filter') : 'all';
 
     const filtered = LOCKER_LOCATIONS.filter(loc => {
-      const matchesCategory = category === 'all' || loc.category === category;
-      const matchesQuery = !query || 
+      return !query || 
         loc.name.toLowerCase().includes(query) || 
         loc.address.toLowerCase().includes(query) || 
         loc.hint.toLowerCase().includes(query);
-      return matchesCategory && matchesQuery;
     });
 
     renderLockersList(filtered);
@@ -461,14 +448,6 @@ document.addEventListener('DOMContentLoaded', () => {
     filterLockers();
   });
 
-  filterPills.forEach(pill => {
-    pill.addEventListener('click', () => {
-      filterPills.forEach(p => p.classList.remove('active'));
-      pill.classList.add('active');
-      filterLockers();
-    });
-  });
-
   document.getElementById('refreshLocationsBtn').addEventListener('click', () => {
     showToast('Список камер схову оновлено', 'info');
     filterLockers();
@@ -477,12 +456,12 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('locateUserBtn').addEventListener('click', () => {
     if (state.map) {
       state.map.setView([50.0005, 36.2305], 16);
-      showToast('Ваше поточне місцезнаходження визначено!', 'success');
+      showToast('Ваше місцезнаходження визначено!', 'success');
     }
   });
 
   // ==========================================
-  // 5. BOOKING SCREEN & COMPARTMENTS (SCREEN 2)
+  // 5. BOOKING SCREEN & COMPARTMENTS WITH PRICES (SCREEN 2)
   // ==========================================
 
   function updateBookingSummary() {
@@ -494,63 +473,47 @@ document.addEventListener('DOMContentLoaded', () => {
     calculatePrice();
   }
 
-  // Size Selector clicks
-  const sizeCards = document.querySelectorAll('.size-card');
-  sizeCards.forEach(card => {
-    card.addEventListener('click', () => {
-      sizeCards.forEach(c => c.classList.remove('selected'));
-      card.classList.add('selected');
-      state.selectedSize = card.getAttribute('data-size');
-      renderCompartmentsGrid();
-      calculatePrice();
-    });
-  });
-
-  // Compartments Matrix Generation
+  // Compartments Matrix Generation (Prices and size on each cell)
   function renderCompartmentsGrid() {
     const grid = document.getElementById('compartmentsGrid');
     grid.innerHTML = '';
 
-    // Generate 16 simulated compartments for current locker
-    // We deterministically assign sizes and busy/free states
     const total = 16;
     for (let i = 1; i <= total; i++) {
       let cellSize = 'M';
       if (i <= 6) cellSize = 'S';
       else if (i > 12) cellSize = 'L';
 
-      // Deterministic busy cells: cells 3, 7, 9, 11 are occupied
+      const sizeInfo = SIZE_PRICING[cellSize];
       const isBusy = [3, 7, 9, 11].includes(i);
-      const isMatchingSize = (cellSize === state.selectedSize);
 
       const cellEl = document.createElement('div');
       cellEl.className = 'compartment-cell';
 
       if (isBusy) {
         cellEl.classList.add('busy');
-        cellEl.title = `Комірка №${i} (${cellSize}) — Зайнята`;
+        cellEl.title = `Комірка №${i} (${sizeInfo.name}) — Зайнята`;
       } else {
         cellEl.classList.add('free');
         if (i === state.selectedCellNum) {
           cellEl.classList.add('chosen');
         }
-        cellEl.title = `Комірка №${i} (${cellSize}) — Вільна для оренди`;
+        cellEl.title = `Комірка №${i} (${sizeInfo.name}) — Вільна для оренди (${sizeInfo.rate} грн/год)`;
       }
 
       cellEl.innerHTML = `
-        <span class="cell-led"></span>
-        <span class="cell-num">${i}</span>
-        <span class="cell-size-tag">${cellSize}</span>
+        <div class="cell-top-bar">
+          <span class="cell-num">№ ${i}</span>
+          <span class="cell-led"></span>
+        </div>
+        <div class="cell-size-badge">${cellSize} • ${sizeInfo.capacity}</div>
+        <div class="cell-price-tag">${sizeInfo.rate} грн/год</div>
       `;
 
       if (!isBusy) {
         cellEl.addEventListener('click', () => {
-          // If user clicked cell with different size, update size selector automatically
-          if (cellSize !== state.selectedSize) {
-            state.selectedSize = cellSize;
-            sizeCards.forEach(c => c.classList.toggle('selected', c.getAttribute('data-size') === cellSize));
-          }
           state.selectedCellNum = i;
+          state.selectedSize = cellSize;
           renderCompartmentsGrid();
           calculatePrice();
         });
@@ -559,7 +522,6 @@ document.addEventListener('DOMContentLoaded', () => {
       grid.appendChild(cellEl);
     }
 
-    // Sync button text
     document.getElementById('btnCellNumber').textContent = state.selectedCellNum;
   }
 
@@ -580,7 +542,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const rate = sizeInfo.rate;
     const total = hours * rate;
 
-    document.getElementById('calcSizeName').textContent = sizeInfo.name;
+    const calcBadge = document.getElementById('calcCellBadge');
+    if (calcBadge) {
+      calcBadge.textContent = `Комірка № ${state.selectedCellNum} (${sizeInfo.name})`;
+    }
+
     document.getElementById('calcBaseRate').textContent = `${rate} грн / год`;
     document.getElementById('calcHours').textContent = `${hours} год`;
     document.getElementById('calcTotalSum').textContent = `${total.toFixed(2)} грн`;
@@ -599,13 +565,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const confirmPaymentBtn = document.getElementById('confirmPaymentBtn');
 
   proceedToPaymentBtn.addEventListener('click', () => {
-    // Populate Modal details
     const sizeInfo = SIZE_PRICING[state.selectedSize];
     const total = state.estimatedHours * sizeInfo.rate;
 
     document.getElementById('modalLockerName').textContent = state.selectedLocker.name;
-    document.getElementById('modalCellDetails').textContent = `№ ${state.selectedCellNum} (${sizeInfo.name})`;
-    document.getElementById('modalTimeEstimate').textContent = `${state.estimatedHours} год (${sizeInfo.rate} грн/год)`;
+    document.getElementById('modalCellDetails').textContent = `№ ${state.selectedCellNum} (${sizeInfo.name}, ${sizeInfo.rate} грн/год)`;
+    document.getElementById('modalTimeEstimate').textContent = `${state.estimatedHours} год`;
     document.getElementById('modalTotalPrice').textContent = `${total.toFixed(2)} грн`;
 
     if (paymentModal.showModal) paymentModal.showModal();
@@ -620,7 +585,6 @@ document.addEventListener('DOMContentLoaded', () => {
   closePaymentModalBtn.addEventListener('click', closePayment);
   cancelBookingBtn.addEventListener('click', closePayment);
 
-  // Method cards radio styling
   document.querySelectorAll('.payment-method-card input').forEach(input => {
     input.addEventListener('change', () => {
       document.querySelectorAll('.payment-method-card').forEach(c => c.classList.remove('selected'));
@@ -628,7 +592,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Successful payment & rental activation
   confirmPaymentBtn.addEventListener('click', () => {
     closePayment();
 
@@ -641,6 +604,7 @@ document.addEventListener('DOMContentLoaded', () => {
       lockerId: state.selectedLocker.id,
       lockerName: state.selectedLocker.name,
       lockerAddress: state.selectedLocker.address,
+      hint: state.selectedLocker.hint,
       cellNum: state.selectedCellNum,
       size: state.selectedSize,
       rate: SIZE_PRICING[state.selectedSize].rate,
@@ -651,13 +615,12 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     saveActiveRental();
+    updateNavigationDots();
     updateRentalScreen();
     showToast(`Комірку №${state.activeRental.cellNum} заброньовано! Речі готові до зберігання.`, 'success');
 
-    // Switch to Screen 3 "Моя оренда"
     switchScreen('screen-rental');
 
-    // Automatically trigger door modal for placing luggage
     setTimeout(() => {
       openDoorModal(state.activeRental.cellNum);
     }, 600);
@@ -672,27 +635,26 @@ document.addEventListener('DOMContentLoaded', () => {
   function updateRentalScreen() {
     const rent = state.activeRental;
     if (!rent) {
-      rentalActiveDot.style.display = 'none';
+      updateNavigationDots();
       if (rentalTimerInterval) clearInterval(rentalTimerInterval);
       return;
     }
 
-    rentalActiveDot.style.display = 'block';
+    updateNavigationDots();
 
     document.getElementById('rentalLockerTitle').textContent = rent.lockerName;
     document.getElementById('rentalLockerAddr').textContent = rent.lockerAddress;
+    document.getElementById('rentalLockerHint').textContent = rent.hint || 'Локер розташований біля центрального входу';
     document.getElementById('activeCellNum').textContent = `№ ${rent.cellNum}`;
     
     const sizeInfo = SIZE_PRICING[rent.size];
-    document.getElementById('activeCellSize').textContent = `${rent.size} (${sizeInfo.specs})`;
+    document.getElementById('activeCellSize').textContent = `${rent.size} (${sizeInfo.rate} грн/год, ${sizeInfo.specs})`;
     document.getElementById('rentalStartTime').textContent = rent.startTimeFormatted;
     document.getElementById('rentalPinCode').textContent = rent.pin;
     document.getElementById('qrModalPin').textContent = rent.pin;
 
-    // Generate mock QR Code SVG
     generateQrSvg(rent.id + '-' + rent.pin);
 
-    // Start timer counter
     if (rentalTimerInterval) clearInterval(rentalTimerInterval);
     rentalTimerInterval = setInterval(updateLiveTimer, 1000);
     updateLiveTimer();
@@ -712,8 +674,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const timerDisplay = document.getElementById('liveTimerDisplay');
     if (timerDisplay) timerDisplay.textContent = formattedTime;
 
-    // Calculate real-time accumulated cost
-    // First hour is charged fully, subsequent hours prorated by fraction of hour
     const rate = state.activeRental.rate;
     const billedHours = Math.max(1, Math.ceil(totalSeconds / 3600));
     const currentCost = (billedHours * rate).toFixed(2);
@@ -733,10 +693,8 @@ document.addEventListener('DOMContentLoaded', () => {
   unlockCellBtn.addEventListener('click', () => {
     if (!state.activeRental) return;
 
-    // Play lock sound synthesis
     playLockSound();
 
-    // Visual button state
     unlockCellBtn.style.transform = 'scale(0.97)';
     const textSpan = unlockCellBtn.querySelector('.unlock-main-text');
     const oldText = textSpan.textContent;
@@ -752,7 +710,6 @@ document.addEventListener('DOMContentLoaded', () => {
   function openDoorModal(cellNum) {
     document.getElementById('openedCellNum').textContent = cellNum;
     
-    // Update graphic on screen
     const doorVisual = document.getElementById('doorVisual');
     const lockIcon = document.getElementById('doorLockIcon');
     const statusText = document.getElementById('doorStatusText');
@@ -771,7 +728,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (doorOpenedModal.close) doorOpenedModal.close();
     else doorOpenedModal.removeAttribute('open');
 
-    // Reset visual door status back to locked
     const doorVisual = document.getElementById('doorVisual');
     const lockIcon = document.getElementById('doorLockIcon');
     const statusText = document.getElementById('doorStatusText');
@@ -782,7 +738,7 @@ document.addEventListener('DOMContentLoaded', () => {
       statusText.textContent = 'Дверцята зачинені та заблоковані';
     }
 
-    showToast('Дверцята надійно зачинено', 'info');
+    showToast('Дверцята заблоковано', 'info');
   });
 
   // Finish Rental
@@ -793,7 +749,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const confirmFinish = confirm('Ви дійсно забрали всі свої речі та бажаєте завершити оренду комірки?');
     if (!confirmFinish) return;
 
-    // Play sound
     playLockSound();
 
     const rent = state.activeRental;
@@ -802,7 +757,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const billedHours = Math.max(1, Math.ceil(totalMinutes / 60));
     const finalPrice = (billedHours * rent.rate).toFixed(2);
 
-    // Push to history
     state.history.unshift({
       id: 'hist-' + Date.now(),
       lockerName: rent.lockerName,
@@ -815,9 +769,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     saveHistory();
 
-    // Clear active rental
     state.activeRental = null;
     saveActiveRental();
+    updateNavigationDots();
     updateRentalScreen();
     renderHistory();
 
@@ -835,23 +789,18 @@ document.addEventListener('DOMContentLoaded', () => {
   const dismissQrBtn = document.getElementById('dismissQrBtn');
 
   function generateQrSvg(text) {
-    // Elegant SVG QR Mockup with recognizable finder patterns
     const svgCode = `
       <svg viewBox="0 0 100 100" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
         <rect width="100" height="100" fill="#ffffff" />
-        <!-- Top-left finder -->
         <rect x="8" y="8" width="28" height="28" fill="#0f172a" rx="4"/>
         <rect x="14" y="14" width="16" height="16" fill="#ffffff" rx="2"/>
         <rect x="18" y="18" width="8" height="8" fill="#0f172a" rx="1"/>
-        <!-- Top-right finder -->
         <rect x="64" y="8" width="28" height="28" fill="#0f172a" rx="4"/>
         <rect x="70" y="14" width="16" height="16" fill="#ffffff" rx="2"/>
         <rect x="74" y="18" width="8" height="8" fill="#0f172a" rx="1"/>
-        <!-- Bottom-left finder -->
         <rect x="8" y="64" width="28" height="28" fill="#0f172a" rx="4"/>
         <rect x="14" y="70" width="16" height="16" fill="#ffffff" rx="2"/>
         <rect x="18" y="74" width="8" height="8" fill="#0f172a" rx="1"/>
-        <!-- Data points mock -->
         <rect x="42" y="10" width="6" height="6" fill="#0f172a"/>
         <rect x="52" y="14" width="6" height="6" fill="#0f172a"/>
         <rect x="42" y="24" width="6" height="6" fill="#0f172a"/>
@@ -876,7 +825,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const large = document.getElementById('largeQrContainer');
     if (large) {
-      large.innerHTML = `<div style="width:200px; height:200px; margin:0 auto;">${svgCode}</div>`;
+      large.innerHTML = `<div style="width:220px; height:220px; margin:0 auto;">${svgCode}</div>`;
     }
   }
 
@@ -893,18 +842,16 @@ document.addEventListener('DOMContentLoaded', () => {
   closeQrModalBtn.addEventListener('click', closeQr);
   dismissQrBtn.addEventListener('click', closeQr);
 
-  // Copy PIN
   document.getElementById('copyPinBtn').addEventListener('click', () => {
     if (state.activeRental && navigator.clipboard) {
       navigator.clipboard.writeText(state.activeRental.pin);
-      showToast('PIN-код скопійовано в буфер обміну', 'info');
+      showToast('PIN-код скопійовано', 'info');
     }
   });
 
-  // Share rental
   document.getElementById('shareRentalBtn').addEventListener('click', () => {
     if (!state.activeRental) return;
-    const shareText = `Моя оренда камери схову SmartLocker: ${state.activeRental.lockerName}, комірка №${state.activeRental.cellNum}. Резервний PIN: ${state.activeRental.pin}`;
+    const shareText = `Моя оренда SmartLocker: ${state.activeRental.lockerName}, комірка №${state.activeRental.cellNum}. Резервний PIN: ${state.activeRental.pin}`;
     if (navigator.share) {
       navigator.share({ title: 'SmartLocker', text: shareText }).catch(() => {});
     } else if (navigator.clipboard) {
@@ -913,7 +860,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Open Route
   document.getElementById('openRouteBtn').addEventListener('click', () => {
     if (state.activeRental) {
       showToast(`Прокладаємо пішохідний маршрут до: ${state.activeRental.lockerName}`, 'info');
@@ -928,7 +874,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const container = document.getElementById('historyListContainer');
     container.innerHTML = '';
 
-    // Calculate stats
     const totalCount = state.history.length;
     let totalSpent = 0;
 
@@ -942,9 +887,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (state.history.length === 0) {
       container.innerHTML = `
-        <div style="text-align:center; padding:32px 16px; color:#64748b;">
-          <i class="fa-solid fa-receipt" style="font-size:2rem; margin-bottom:8px; opacity:0.5;"></i>
-          <p>У вас поки немає завершених оренд</p>
+        <div style="text-align:center; padding:48px 16px; color:#64748b; background:#fff; border-radius:14px; border:1px solid #e2e8f0;">
+          <i class="fa-solid fa-receipt" style="font-size:2.5rem; margin-bottom:12px; opacity:0.4;"></i>
+          <p style="font-size:1rem; font-weight:600;">У вас поки немає завершених оренд</p>
         </div>
       `;
       return;
@@ -962,9 +907,9 @@ document.addEventListener('DOMContentLoaded', () => {
           <span class="history-status-tag">Завершено</span>
         </div>
         <div class="history-card-body">
-          <span>Комірка <strong>№ ${item.cellNum}</strong> (${item.size})</span>
-          <span>Час: <strong>${item.duration}</strong></span>
-          <strong style="color:var(--primary);">${item.totalPaid}</strong>
+          <span>Комірка <strong>№ ${item.cellNum}</strong> (Розмір ${item.size})</span>
+          <span>Тривалість: <strong>${item.duration}</strong></span>
+          <strong style="color:var(--primary); font-size:1.05rem;">${item.totalPaid}</strong>
         </div>
       `;
       container.appendChild(card);
@@ -1013,6 +958,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderLockersList(LOCKER_LOCATIONS);
   updateBookingSummary();
   renderHistory();
+  updateNavigationDots();
 
   if (state.activeRental) {
     updateRentalScreen();
